@@ -1,4 +1,4 @@
-[![.NET CI](https://github.com/<OWNER>/<REPO>/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/dotnet-ci.yml)
+[![.NET CI](https://github.com/clover-storm/unit-simulator/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/clover-storm/unit-simulator/actions/workflows/dotnet-ci.yml)
 
 # UnitMove 시뮬레이션
 
