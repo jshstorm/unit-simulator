@@ -1,0 +1,36 @@
+name: .NET CI
+
+# 워크플로우 트리거 조건 설정
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # 실행 환경 설정
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 소스 코드 체크아웃
+    - uses: actions/checkout@v4
+
+    # 2. .NET SDK 설정
+    # csproj 파일에서 .NET 버전을 자동으로 감지하여 설치
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    # 3. 의존성 복원
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # 4. 프로젝트 빌드
+    - name: Build
+      run: dotnet build --no-restore
+
+    # 5. (선택 사항) 테스트 실행 - 현재 프로젝트에는 테스트가 없으므로 주석 처리
+    # - name: Test
+    #   run: dotnet test --no-build --verbosity normal
