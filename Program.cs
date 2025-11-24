@@ -461,8 +461,8 @@ public class Program
 
             if (TryGetFirstCollision(mover, other, out var tCollision, out var _))
             {
-                float timeWindow = (combinedRadius * 2f) / minSpeed; // how far ahead we care
-                if (tCollision <= timeWindow)
+                float collisionWindow = (combinedRadius * 2f) / minSpeed; // how far ahead we care
+                if (tCollision <= collisionWindow)
                 {
                     Vector2 relAtCollision = (other.Position + other.Velocity * tCollision) - (mover.Position + mover.Velocity * tCollision);
                     float distanceAtCollision = relAtCollision.Length();
