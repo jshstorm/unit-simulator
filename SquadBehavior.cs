@@ -99,6 +99,7 @@ public class SquadBehavior
             follower.HasAvoidanceTarget = false;
             follower.AvoidanceTarget = Vector2.Zero;
             follower.AvoidanceThreat = null;
+            follower.ClearAvoidancePath();
             follower.CurrentDestination = formationTarget;
 
             follower.Velocity = distanceToSlot < 3f ? Vector2.Zero : MathUtils.SafeNormalize(toFormation) * rampedSpeed;
@@ -176,6 +177,7 @@ public class SquadBehavior
             friendly.HasAvoidanceTarget = false;
             friendly.AvoidanceTarget = Vector2.Zero;
             friendly.AvoidanceThreat = null;
+            friendly.ClearAvoidancePath();
             return;
         }
 
@@ -195,6 +197,7 @@ public class SquadBehavior
             friendly.HasAvoidanceTarget = false;
             friendly.AvoidanceTarget = Vector2.Zero;
             friendly.AvoidanceThreat = null;
+            friendly.ClearAvoidancePath();
             friendly.CurrentDestination = friendly.Position;
             if (friendly.AttackCooldown <= 0)
             {
@@ -205,14 +208,29 @@ public class SquadBehavior
         }
         else
         {
-            Vector2 seekVector = MathUtils.SafeNormalize(attackPosition - friendly.Position);
+            Vector2 desiredDirection = attackPosition - friendly.Position;
+            Vector2 desiredForward = MathUtils.SafeNormalize(desiredDirection);
             Vector2 separationVector = MathUtils.CalculateSeparationVector(friendly, friendlies, Constants.FRIENDLY_SEPARATION_RADIUS);
             var avoidanceCandidates = livingEnemies.Cast<Unit>().Concat(friendlies.Where(u => u != friendly)).ToList();
-            Vector2 avoidance = AvoidanceSystem.PredictiveAvoidanceVector(friendly, avoidanceCandidates, out var avoidTarget, out var isDetouring, out var avoidanceThreat);
-            friendly.HasAvoidanceTarget = isDetouring;
-            friendly.AvoidanceTarget = isDetouring ? avoidTarget : Vector2.Zero;
-            friendly.AvoidanceThreat = isDetouring ? avoidanceThreat : null;
-            friendly.Velocity = MathUtils.SafeNormalize(seekVector + separationVector + avoidance) * friendly.Speed;
+            Vector2 avoidance = AvoidanceSystem.PredictiveAvoidanceVector(friendly, avoidanceCandidates, desiredForward, out var avoidTarget, out var isDetouring, out var avoidanceThreat);
+
+            bool hasWaypoint = friendly.TryGetNextAvoidanceWaypoint(out var waypoint);
+            Vector2 steeringTarget = hasWaypoint ? waypoint : attackPosition;
+            bool hasDetour = hasWaypoint || isDetouring;
+
+            if (!hasDetour)
+            {
+                friendly.ClearAvoidancePath();
+            }
+
+            friendly.HasAvoidanceTarget = hasDetour;
+            friendly.AvoidanceTarget = hasWaypoint ? steeringTarget : (isDetouring ? avoidTarget : Vector2.Zero);
+            friendly.AvoidanceThreat = hasDetour ? avoidanceThreat : null;
+            friendly.CurrentDestination = steeringTarget;
+
+            Vector2 steeringDir = MathUtils.SafeNormalize(steeringTarget - friendly.Position);
+            Vector2 finalDir = MathUtils.SafeNormalize(steeringDir + separationVector + avoidance);
+            friendly.Velocity = finalDir * friendly.Speed;
         }
     }
 
@@ -228,6 +246,7 @@ public class SquadBehavior
             f.HasAvoidanceTarget = false;
             f.AvoidanceTarget = Vector2.Zero;
             f.AvoidanceThreat = null;
+            f.ClearAvoidancePath();
             f.CurrentDestination = f.Position;
         }
     }
@@ -241,6 +260,7 @@ public class SquadBehavior
         leader.HasAvoidanceTarget = false;
         leader.AvoidanceTarget = Vector2.Zero;
         leader.AvoidanceThreat = null;
+        leader.ClearAvoidancePath();
         leader.CurrentDestination = toMain.Length() < 5f ? leader.Position : mainTarget;
         leader.Velocity = toMain.Length() < 5f ? Vector2.Zero : MathUtils.SafeNormalize(toMain) * leader.Speed;
         leader.Position += leader.Velocity;

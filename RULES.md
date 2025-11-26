@@ -32,6 +32,7 @@
 - **정확한 충돌 예측**: 두 이동 원 사이의 첫 충돌 시각을 2차 방정식으로 계산(`MathUtils.TryGetFirstCollision`). 합반경은 `Constants.COLLISION_RADIUS_SCALE`로 축소한 값 사용.
 - **위험 판단**: 충돌 시각이 `min((합반경*2)/speed, Constants.AVOIDANCE_MAX_LOOKAHEAD)` 이내이거나 최근접 시점/헤딩 튜브에서 합반경보다 좁으면 위험 목록에 추가합니다. 헤딩 검사는 이동 속도×`AVOIDANCE_MAX_LOOKAHEAD` 거리까지만 본다.
 - **회피 방향 선택**: 현재 진행 방향을 기준으로 좌/우 회전(`Constants.AVOIDANCE_ANGLE_STEP`)을 스캔해 최초로 위험이 없는 방향을 선택, 가중치와 회피 목표를 설정합니다. 위험이 없으면 회피 벡터는 0입니다.
+- **세그먼트 우회 경로**: 장애물을 만나면 `Constants.AVOIDANCE_SEGMENT_COUNT`에 따라 (우회 시작 → 측면 편향 → 병렬 이동 → 경로 복귀) 순서로 최대 3개 세그먼트를 생성해 고정된 우회 목표를 잇달아 따라가며, 세그먼트 거리/오프셋은 정의된 상수(`*_SEGMENT_*`)로 데이터 드리븐하게 조정합니다.
 
 ## 렌더링 (`Renderer`)
 - 유닛, 슬롯, 전방 벡터, 최근 공격선, 회피 목표(우회 중일 때만)를 프레임 이미지로 그려 `output/frame_xxxx.png`로 저장합니다.

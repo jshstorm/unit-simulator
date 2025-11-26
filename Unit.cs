@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace UnitSimulator;
@@ -30,6 +31,9 @@ public class Unit
     public Vector2 AvoidanceTarget { get; set; } = Vector2.Zero;
     public bool HasAvoidanceTarget { get; set; }
     public int FramesSinceSlotEvaluation { get; set; }
+
+    private readonly List<Vector2> _avoidancePath = new();
+    private int _avoidancePathIndex = 0;
 
     public Unit(Vector2 position, float radius, float speed, float turnSpeed, UnitRole role, int hp, int id, UnitFaction faction)
     {
@@ -117,6 +121,41 @@ public class Unit
             }
             attacker.TakenSlotIndex = -1;
         }
+    }
+
+    public void SetAvoidancePath(List<Vector2> waypoints)
+    {
+        _avoidancePath.Clear();
+        if (waypoints.Count == 0)
+        {
+            _avoidancePathIndex = 0;
+            return;
+        }
+        _avoidancePath.AddRange(waypoints);
+        _avoidancePathIndex = 0;
+    }
+
+    public bool TryGetNextAvoidanceWaypoint(out Vector2 waypoint)
+    {
+        while (_avoidancePathIndex < _avoidancePath.Count)
+        {
+            var target = _avoidancePath[_avoidancePathIndex];
+            if (Vector2.Distance(Position, target) <= Constants.AVOIDANCE_WAYPOINT_THRESHOLD)
+            {
+                _avoidancePathIndex++;
+                continue;
+            }
+            waypoint = target;
+            return true;
+        }
+        waypoint = Vector2.Zero;
+        return false;
+    }
+
+    public void ClearAvoidancePath()
+    {
+        _avoidancePath.Clear();
+        _avoidancePathIndex = 0;
     }
 
     public void UpdateRotation()

@@ -59,6 +59,7 @@ public class EnemyBehavior
             enemy.HasAvoidanceTarget = false;
             enemy.AvoidanceTarget = Vector2.Zero;
             enemy.AvoidanceThreat = null;
+            enemy.ClearAvoidancePath();
             enemy.FramesSinceSlotEvaluation = 0;
             return;
         }
@@ -95,6 +96,7 @@ public class EnemyBehavior
                 enemy.HasAvoidanceTarget = false;
                 enemy.AvoidanceTarget = Vector2.Zero;
                 enemy.AvoidanceThreat = null;
+                enemy.ClearAvoidancePath();
                 return;
             }
         }
@@ -105,14 +107,27 @@ public class EnemyBehavior
             targetPosition = target.Position + MathUtils.SafeNormalize(perpendicular) * 200f;
         }
 
-        enemy.CurrentDestination = targetPosition;
-        Vector2 seekVector = MathUtils.SafeNormalize(targetPosition - enemy.Position);
+        Vector2 desiredDirection = targetPosition - enemy.Position;
+        Vector2 desiredForward = MathUtils.SafeNormalize(desiredDirection);
         Vector2 separationVector = MathUtils.CalculateSeparationVector(enemy, enemies, Constants.SEPARATION_RADIUS);
-        Vector2 friendlyAvoidance = AvoidanceSystem.PredictiveAvoidanceVector(enemy, livingFriendlies, out var avoidTarget, out var isDetouring, out var avoidanceThreat);
-        
-        enemy.HasAvoidanceTarget = isDetouring;
-        enemy.AvoidanceTarget = isDetouring ? avoidTarget : Vector2.Zero;
-        enemy.AvoidanceThreat = isDetouring ? avoidanceThreat : null;
-        enemy.Velocity = MathUtils.SafeNormalize(seekVector + separationVector + friendlyAvoidance) * enemy.Speed;
+        Vector2 friendlyAvoidance = AvoidanceSystem.PredictiveAvoidanceVector(enemy, livingFriendlies, desiredForward, out var avoidTarget, out var isDetouring, out var avoidanceThreat);
+
+        bool hasWaypoint = enemy.TryGetNextAvoidanceWaypoint(out var waypoint);
+        Vector2 steeringTarget = hasWaypoint ? waypoint : targetPosition;
+        bool hasDetour = hasWaypoint || isDetouring;
+
+        if (!hasDetour)
+        {
+            enemy.ClearAvoidancePath();
+        }
+
+        enemy.HasAvoidanceTarget = hasDetour;
+        enemy.AvoidanceTarget = hasWaypoint ? steeringTarget : (isDetouring ? avoidTarget : Vector2.Zero);
+        enemy.AvoidanceThreat = hasDetour ? avoidanceThreat : null;
+        enemy.CurrentDestination = steeringTarget;
+
+        Vector2 steeringDir = MathUtils.SafeNormalize(steeringTarget - enemy.Position);
+        Vector2 finalDir = MathUtils.SafeNormalize(steeringDir + separationVector + friendlyAvoidance);
+        enemy.Velocity = finalDir * enemy.Speed;
     }
 }

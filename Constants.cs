@@ -36,4 +36,9 @@ public static class Constants
     public const float AVOIDANCE_ANGLE_STEP = MathF.PI / 8f; // 22.5 degrees
     public const int MAX_AVOIDANCE_ITERATIONS = 8;
     public const float AVOIDANCE_MAX_LOOKAHEAD = 3.5f;
+    public const int AVOIDANCE_SEGMENT_COUNT = 3;
+    public const float AVOIDANCE_SEGMENT_START_DISTANCE = 20f;
+    public const float AVOIDANCE_LATERAL_PADDING = 25f;
+    public const float AVOIDANCE_PARALLEL_DISTANCE_MULTIPLIER = 1.5f;
+    public const float AVOIDANCE_WAYPOINT_THRESHOLD = 12f;
 }
