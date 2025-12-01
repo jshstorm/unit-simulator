@@ -1,0 +1,8 @@
+# Visual Studio
+.vs/
+
+# Rider
+.idea/
+
+# Local environments
+appsettings.*.json

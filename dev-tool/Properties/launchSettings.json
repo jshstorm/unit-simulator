@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AvalonDevTool": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\avalon_builds\\dev-tool"
+    }
+  }
+}
