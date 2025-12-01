@@ -101,27 +101,27 @@ try {
 # 설치 인자 구성
 $InstallArgs = @()
 
-if ($Channel) {
+if (-not [string]::IsNullOrEmpty($Channel)) {
     $InstallArgs += "-Channel", $Channel
 }
 
-if ($Version) {
+if (-not [string]::IsNullOrEmpty($Version)) {
     $InstallArgs += "-Version", $Version
 }
 
-if ($InstallDir) {
+if (-not [string]::IsNullOrEmpty($InstallDir)) {
     $InstallArgs += "-InstallDir", $InstallDir
 }
 
-if ($Architecture) {
+if (-not [string]::IsNullOrEmpty($Architecture)) {
     $InstallArgs += "-Architecture", $Architecture
 }
 
-if ($Runtime) {
+if (-not [string]::IsNullOrEmpty($Runtime)) {
     $InstallArgs += "-Runtime", $Runtime
 }
 
-if ($Quality) {
+if (-not [string]::IsNullOrEmpty($Quality)) {
     $InstallArgs += "-Quality", $Quality
 }
 

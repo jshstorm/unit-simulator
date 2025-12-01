@@ -9,18 +9,22 @@
 # 오류가 발생하면 즉시 스크립트를 중단합니다.
 $ErrorActionPreference = "Stop"
 
-# 설치된 dotnet 실행 파일 경로 설정
-$DotnetPath = "$env:USERPROFILE\.dotnet\dotnet.exe"
-
-# dotnet.exe가 없으면 시스템 PATH에서 검색
-if (-not (Test-Path $DotnetPath)) {
-    $DotnetCmd = Get-Command "dotnet" -ErrorAction SilentlyContinue
-    if ($DotnetCmd) {
-        $DotnetPath = $DotnetCmd.Source
-    } else {
-        Write-Error "오류: dotnet을 찾을 수 없습니다. SDK가 설치되었는지 확인하세요."
-        exit 1
+# 시스템 PATH에서 dotnet 검색 (가장 일반적인 설치 위치)
+$DotnetPath = $null
+$DotnetCmd = Get-Command "dotnet" -ErrorAction SilentlyContinue
+if ($DotnetCmd) {
+    $DotnetPath = $DotnetCmd.Source
+} else {
+    # PATH에 없으면 사용자 프로필의 .dotnet 폴더에서 검색
+    $UserDotnetPath = "$env:USERPROFILE\.dotnet\dotnet.exe"
+    if (Test-Path $UserDotnetPath) {
+        $DotnetPath = $UserDotnetPath
     }
+}
+
+if (-not $DotnetPath) {
+    Write-Error "오류: dotnet을 찾을 수 없습니다. SDK가 설치되었는지 확인하세요."
+    exit 1
 }
 
 Write-Host "--- 의존성 복원 시작 ---"
