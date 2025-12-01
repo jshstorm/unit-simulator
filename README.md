@@ -59,7 +59,41 @@ ffmpeg -framerate 60 -i output/frame_%04d.png -c:v libx264 -pix_fmt yuv420p outp
 
 이 프로젝트는 GitHub Actions를 사용한 CI(Continuous Integration) 파이프라인을 통해 코드의 무결성을 자동으로 검증합니다. Pull Request나 Push가 발생할 때마다 빌드가 정상적으로 수행되는지 확인합니다.
 
+### Linux/macOS
+
 로컬 환경에서 빌드 상태를 확인하려면 다음 명령어를 실행하세요:
 ```bash
 ./ci-check.sh
 ```
+
+### Windows (PowerShell)
+
+Windows 환경에서 빌드 상태를 확인하려면 PowerShell에서 다음 명령어를 실행하세요:
+```powershell
+.\ci-check.ps1
+```
+
+## .NET SDK 설치
+
+이 프로젝트를 실행하기 위해서는 .NET SDK가 설치되어 있어야 합니다. CI 환경이나 자동화된 설치가 필요한 경우 아래 스크립트를 사용할 수 있습니다.
+
+### Linux/macOS
+
+```bash
+./dotnet-install.sh --channel LTS
+```
+
+### Windows (PowerShell)
+
+```powershell
+.\dotnet-install.ps1 -Channel LTS
+```
+
+**주요 옵션:**
+- `-Channel`: 설치할 .NET 채널 (LTS, STS, 8.0, 9.0 등)
+- `-Version`: 설치할 특정 버전 (latest, 8.0.100 등)
+- `-InstallDir`: 설치 디렉터리
+- `-Architecture`: 아키텍처 (x64, x86, arm64)
+- `-Help`: 전체 도움말 표시
+
+> **참고**: 개발 환경 설정이나 일반적인 앱 실행을 위해서는 [.NET 공식 웹사이트](https://dotnet.microsoft.com/download)에서 설치 프로그램을 다운로드하여 사용하는 것을 권장합니다.
