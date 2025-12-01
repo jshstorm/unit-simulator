@@ -60,6 +60,56 @@ ffmpeg -framerate 60 -i output/frame_%04d.png -c:v libx264 -pix_fmt yuv420p outp
 이 프로젝트는 GitHub Actions를 사용한 CI(Continuous Integration) 파이프라인을 통해 코드의 무결성을 자동으로 검증합니다. Pull Request나 Push가 발생할 때마다 빌드가 정상적으로 수행되는지 확인합니다.
 
 로컬 환경에서 빌드 상태를 확인하려면 다음 명령어를 실행하세요:
+
+**Linux/macOS (Bash):**
 ```bash
 ./ci-check.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\ci-check.ps1
+```
+
+## .NET SDK 설치 스크립트
+
+.NET SDK가 설치되어 있지 않은 경우, 다음 스크립트를 사용하여 설치할 수 있습니다:
+
+**Linux/macOS (Bash):**
+```bash
+./dotnet-install.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\dotnet-install.ps1
+```
+
+### PowerShell 스크립트 옵션
+
+`dotnet-install.ps1` 스크립트는 다음과 같은 옵션을 지원합니다:
+
+| 옵션 | 설명 | 예시 |
+|------|------|------|
+| `-Channel` | 다운로드할 채널 (기본값: LTS) | `-Channel 8.0` |
+| `-Version` | 특정 버전 설치 (기본값: Latest) | `-Version 8.0.100` |
+| `-InstallDir` | 설치 디렉터리 | `-InstallDir "C:\dotnet"` |
+| `-Architecture` | 설치할 아키텍처 | `-Architecture x64` |
+| `-Runtime` | 런타임만 설치 | `-Runtime dotnet` |
+| `-Quality` | 품질 수준 | `-Quality preview` |
+| `-DryRun` | 설치하지 않고 다운로드 링크만 표시 | `-DryRun` |
+| `-NoPath` | PATH에 추가하지 않음 | `-NoPath` |
+| `-Verbose` | 상세 로그 출력 | `-Verbose` |
+| `-Help` | 도움말 표시 | `-Help` |
+
+**예시:**
+```powershell
+# 최신 LTS 버전 설치
+.\dotnet-install.ps1
+
+# 특정 버전 설치
+.\dotnet-install.ps1 -Version 8.0.100
+
+# 특정 채널의 런타임만 설치
+.\dotnet-install.ps1 -Channel 8.0 -Runtime dotnet
 ```
