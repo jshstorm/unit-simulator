@@ -146,9 +146,8 @@ try {
     # TLS 1.2 사용 (보안 연결을 위해 필수)
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    # 스크립트 다운로드
-    $WebClient = New-Object System.Net.WebClient
-    $WebClient.DownloadFile($OfficialScriptUrl, $TempScriptPath)
+    # 스크립트 다운로드 (Invoke-WebRequest 사용)
+    Invoke-WebRequest -Uri $OfficialScriptUrl -OutFile $TempScriptPath -UseBasicParsing
     Write-Success "스크립트 다운로드 완료"
 }
 catch {
@@ -227,9 +226,9 @@ catch {
     exit 1
 }
 finally {
-    # 임시 스크립트 파일 정리
+    # 임시 스크립트 파일 정리 (정리 실패는 무시)
     if (Test-Path $TempScriptPath) {
-        Remove-Item $TempScriptPath -Force -ErrorAction SilentlyContinue
+        Remove-Item $TempScriptPath -Force -ErrorAction Ignore
     }
 }
 
@@ -240,9 +239,10 @@ if (Test-Path $DotnetExePath) {
     Write-Info "dotnet 실행 파일 경로: $DotnetExePath"
 
     if (-not $NoPath) {
-        # 현재 세션의 PATH에 추가
-        if ($env:PATH -notlike "*$InstallDir*") {
-            $env:PATH = "$InstallDir;$env:PATH"
+        # 현재 세션의 PATH에 추가 (경로 분리하여 정확히 확인)
+        $PathEntries = $env:PATH -split [IO.Path]::PathSeparator
+        if ($PathEntries -notcontains $InstallDir) {
+            $env:PATH = "$InstallDir$([IO.Path]::PathSeparator)$env:PATH"
             Write-Info "현재 세션의 PATH에 추가됨: $InstallDir"
         }
     }

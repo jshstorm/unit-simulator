@@ -10,9 +10,9 @@ $ErrorActionPreference = "Stop"
 $DotnetPath = $null
 
 # 1. 먼저 시스템 PATH에서 dotnet을 찾습니다
-$DotnetCommand = Get-Command dotnet -ErrorAction SilentlyContinue
-if ($DotnetCommand) {
-    $DotnetPath = $DotnetCommand.Source
+$DotnetCommandInfo = Get-Command dotnet -ErrorAction SilentlyContinue
+if ($DotnetCommandInfo) {
+    $DotnetPath = $DotnetCommandInfo.Source
 }
 
 # 2. PATH에 없으면 사용자 프로필의 .dotnet 폴더에서 찾습니다
