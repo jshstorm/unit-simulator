@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AvalonDevTool.Externals;
+using AvalonDevTool.GoogleSheets;
 using AvalonDevTool.SCM;
 using AvalonDevTool.Utility;
 using MySql.Data.MySqlClient;
@@ -221,24 +222,31 @@ internal class MainMenuCommands : CommandGroup
 
         await AppSettings.ConfigureAsync(cancellationToken);
         var versionString = AppSettings.Current.DataSheetVersion;
-        var cmd = "";
         if (!string.IsNullOrEmpty(versionString))
         {
             AnsiConsole.MarkupLine($"[white]대상 문서 버전은 {versionString} 입니다.[/]");
-            cmd = $"cd /avalon_builds/protoTool && python google_to_pb.py --r false --v {versionString} --restrict false".TerminalQuote();
-        }
-        else
-        {
-            cmd = $"cd /avalon_builds/protoTool && python google_to_pb.py --r false --restrict false".TerminalQuote();
         }
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Arrow3)
             .SpinnerStyle(new Style(foreground: Color.Green))
-            .StartAsync("docker-compose run proto-tool-worker", async ctx =>
+            .StartAsync("XML 직렬화로 데이터 시트 빌드 중...", async ctx =>
             {
-                ctx.Status = $"docker-compose exec proto-tool-worker {cmd}";
-                await Docker.Compose.RunAsync($"proto-tool-worker /bin/bash -c {cmd}", cancellationToken: cancellationToken);
+                // XML 직렬화를 사용하여 데이터 시트 빌드
+                var outputDirectory = "./avalon_builds/protoTool/out";
+                var credentialsPath = "./avalon_builds/protoTool/api_key/gcp/service_account.json";
+                var configPath = "./avalon_builds/protoTool/datasheet_config.json";
+
+                ctx.Status = "Google Sheets 데이터를 XML로 변환 중...";
+                
+                var builder = new DataSheetBuilder(credentialsPath, outputDirectory);
+                var result = await builder.BuildFromConfigAsync(configPath, versionString, cancellationToken);
+
+                if (!result.Success)
+                {
+                    AnsiConsole.MarkupLine($"[red]데이터 시트 빌드 실패: {result.ErrorMessage}[/]");
+                    return;
+                }
 
                 var fileListPath = "./avalon_builds/protoTool/out/filelist.json";
                 var shared = _repositories.FirstOrDefault(r => r.Name == "AvalonShared");
@@ -293,29 +301,52 @@ internal class MainMenuCommands : CommandGroup
     //[Command(CommandFilter.Service, CommandFilter.Protobuf, Interrupt = true)]
     public async ValueTask BuildTextDataSheetAsync(CancellationToken cancellationToken)
     {
-        //await Program.GetGSheetToken(cancellationToken);
         AnsiConsole.MarkupLine("[green]텍스트 데이터 시트 빌드를 시작합니다.[/]");
-        //await AppSettings.ConfigureAsync(cancellationToken);
 
         var versionString = AppSettings.Current.DataSheetVersion;
-        var cmd = "";
         if (!string.IsNullOrEmpty(versionString))
         {
             AnsiConsole.MarkupLine($"[white]대상 문서 버전은 {versionString} 입니다.[/]");
-            cmd = $"cd /avalon_builds/protoTool && python google_text_to_pb.py --version {versionString} --restrict false".TerminalQuote();
-        }
-        else
-        {
-            cmd = $"cd /avalon_builds/protoTool && python google_text_to_pb.py --restrict false".TerminalQuote();
         }
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Arrow3)
             .SpinnerStyle(new Style(foreground: Color.Green))
-            .StartAsync("docker-compose run -d proto-tool-worker", async ctx =>
+            .StartAsync("XML 직렬화로 텍스트 데이터 시트 빌드 중...", async ctx =>
             {
-                ctx.Status = $"docker-compose exec proto-tool-worker {cmd}";
-                await Docker.Compose.RunAsync($"proto-tool-worker /bin/bash -c {cmd}", cancellationToken: cancellationToken); ;
+                // XML 직렬화를 사용하여 텍스트 데이터 시트 빌드
+                var outputDirectory = "./avalon_builds/protoTool/out";
+                var credentialsPath = "./avalon_builds/protoTool/api_key/gcp/service_account.json";
+                var configPath = "./avalon_builds/protoTool/datasheet_config.json";
+
+                ctx.Status = "Google Sheets 텍스트 데이터를 XML로 변환 중...";
+
+                // 텍스트 설정 파일에서 스프레드시트 ID를 읽어 빌드
+                if (File.Exists(configPath))
+                {
+                    var configJson = await File.ReadAllTextAsync(configPath, cancellationToken);
+                    var config = JsonSerializer.Deserialize<DataSheetConfig>(configJson);
+                    
+                    if (config?.TextSpreadsheetIds != null && config.TextSpreadsheetIds.Count > 0)
+                    {
+                        var builder = new DataSheetBuilder(credentialsPath, outputDirectory);
+                        var result = await builder.BuildAsync(config.TextSpreadsheetIds, versionString, cancellationToken);
+
+                        if (!result.Success)
+                        {
+                            AnsiConsole.MarkupLine($"[red]텍스트 데이터 시트 빌드 실패: {result.ErrorMessage}[/]");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"[yellow]텍스트 스프레드시트 ID가 설정되지 않았습니다.[/]");
+                    }
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine($"[yellow]설정 파일이 없습니다: {configPath}[/]");
+                }
                 
                 ctx.Status = "Copy bytes to Client";
                 DataSyncOutputHelper.CopyTextBytes();
@@ -329,19 +360,121 @@ internal class MainMenuCommands : CommandGroup
     [Command(CommandFilter.Service, CommandFilter.Protobuf, Interrupt = true)]
     public async ValueTask BuildDataFromJson(CancellationToken cancellationToken)
     {
-        var cmd = "";
-        AnsiConsole.MarkupLine($"[white]json으로 부터 reference data를 빌드 합니다.[/]");
-        cmd = $"cd /avalon_builds/protoTool/ && pip install -r requirements.txt && python google_to_pb.py --json_to_pb build".TerminalQuote();
+        AnsiConsole.MarkupLine($"[white]JSON으로부터 XML reference data를 빌드합니다.[/]");
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Arrow3)
             .SpinnerStyle(new Style(foreground: Color.Green))
-            .StartAsync("docker-compose up -d proto-tool-worker", async ctx =>
+            .StartAsync("JSON에서 XML로 변환 중...", async ctx =>
             {
-                await Docker.Compose.UpAsync("-d proto-tool-worker", cancellationToken);
-                ctx.Status = $"docker-compose exec proto-tool-worker {cmd}";
-                await Docker.Compose.ExecAsync($"proto-tool-worker /bin/bash -c {cmd}", cancellationToken: cancellationToken);
+                var sourceDir = "./avalon_builds/protoTool/docs_data";
+                var outputDir = "./avalon_builds/protoTool/out";
+
+                if (!Directory.Exists(sourceDir))
+                {
+                    AnsiConsole.MarkupLine($"[red]소스 디렉토리가 존재하지 않습니다: {sourceDir}[/]");
+                    return;
+                }
+
+                Directory.CreateDirectory(outputDir);
+
+                var jsonFiles = Directory.GetFiles(sourceDir, "*.json", SearchOption.AllDirectories);
+                var processedCount = 0;
+
+                foreach (var jsonFile in jsonFiles)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        ctx.Status = $"변환 중: {Path.GetFileName(jsonFile)}";
+                        
+                        var jsonContent = await File.ReadAllTextAsync(jsonFile, cancellationToken);
+                        var sheetName = Path.GetFileNameWithoutExtension(jsonFile);
+                        
+                        // JSON을 파싱하여 SheetData 형식으로 변환
+                        var sheetData = ConvertJsonToSheetData(jsonContent, sheetName);
+                        if (sheetData != null)
+                        {
+                            // XML 파일로 저장
+                            XmlConverter.SaveToXmlFile(sheetData, outputDir);
+                            // Bytes 파일로 저장
+                            XmlConverter.SaveToBytesFile(sheetData, outputDir);
+                            processedCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AnsiConsole.MarkupLine($"[yellow]파일 변환 실패 ({Path.GetFileName(jsonFile)}): {ex.Message}[/]");
+                    }
+                }
+
+                AnsiConsole.MarkupLine($"[green]{processedCount}개 파일 변환 완료[/]");
             });
+    }
+
+    private static SheetData? ConvertJsonToSheetData(string jsonContent, string sheetName)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonContent);
+            var root = doc.RootElement;
+
+            if (root.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            var rows = new List<IList<object>>();
+            List<object>? headers = null;
+
+            foreach (var item in root.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                var row = new List<object>();
+
+                foreach (var prop in item.EnumerateObject())
+                {
+                    if (headers == null)
+                    {
+                        headers = new List<object>();
+                    }
+                    
+                    // Only add headers on the first row
+                    if (rows.Count == 0)
+                    {
+                        headers.Add(prop.Name);
+                    }
+
+                    var value = prop.Value.ValueKind switch
+                    {
+                        JsonValueKind.String => prop.Value.GetString() ?? "",
+                        JsonValueKind.Number => prop.Value.GetRawText(),
+                        JsonValueKind.True => "true",
+                        JsonValueKind.False => "false",
+                        JsonValueKind.Null => "",
+                        _ => prop.Value.GetRawText()
+                    };
+                    row.Add(value);
+                }
+
+                // Add headers as first row only once
+                if (rows.Count == 0 && headers != null)
+                {
+                    rows.Add(headers);
+                }
+                rows.Add(row);
+            }
+
+
+            return rows.Count > 0 ? new SheetData(sheetName, rows) : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
     
     [Command(CommandFilter.Service, Interrupt = true)]
