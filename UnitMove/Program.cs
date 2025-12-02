@@ -1,8 +1,6 @@
 
 using System.IO;
 using System.Numerics;
-using UnitSimulator.GoogleSheets;
-
 namespace UnitSimulator;
 
 public class Program
@@ -12,12 +10,6 @@ public class Program
 
     public static async Task<int> Main(string[] args)
     {
-        // sheet-to-xml 명령어 처리
-        if (args.Length > 0 && args[0] == "sheet-to-xml")
-        {
-            return await SheetToXmlCli.RunAsync(args[1..]);
-        }
-
         // 기존 시뮬레이션 로직 실행
         RunSimulation();
         return 0;
