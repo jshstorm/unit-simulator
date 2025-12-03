@@ -6,13 +6,15 @@ namespace UnitSimulator;
 /// <summary>
 /// Main entry point for the Unit Simulator application.
 /// 
-/// This program supports two modes of operation:
+/// This program supports multiple modes of operation:
 /// 1. Default mode: Runs the simulation using the new SimulatorCore engine.
 /// 2. Legacy mode (--legacy): Uses the original simulation logic for backward compatibility.
+/// 3. Server mode (--server): Starts a WebSocket server for the GUI viewer.
 /// 
 /// Additional command-line options:
 /// - --headless: Run simulation without generating image frames (faster).
 /// - --resume &lt;path&gt;: Resume simulation from a saved frame data JSON file.
+/// - --port &lt;number&gt;: Port number for the WebSocket server (default: 5000).
 /// 
 /// For information about extending the simulation with GUI tools, see development_infra_rules.md.
 /// </summary>
@@ -32,10 +34,19 @@ public class Program
     {
         // Check for command line options
         bool useLegacy = args.Contains("--legacy");
+        bool useServer = args.Contains("--server");
         bool headless = args.Contains("--headless");
         string? resumePath = GetArgumentValue(args, "--resume");
+        string? portStr = GetArgumentValue(args, "--port");
+        int port = int.TryParse(portStr, out var p) ? p : 5000;
 
-        if (useLegacy)
+        if (useServer)
+        {
+            // Run WebSocket server for GUI viewer
+            Console.WriteLine($"Starting WebSocket server on port {port}...");
+            await RunServerAsync(port);
+        }
+        else if (useLegacy)
         {
             // Run using the original simulation logic (backward compatibility)
             Console.WriteLine("Running in legacy mode...");
@@ -55,6 +66,34 @@ public class Program
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Runs the WebSocket server for the GUI viewer.
+    /// The server listens for WebSocket connections and provides real-time
+    /// simulation data to connected clients.
+    /// </summary>
+    /// <param name="port">The port number to listen on.</param>
+    private static async Task RunServerAsync(int port)
+    {
+        var simulator = new SimulatorCore();
+        simulator.RenderingEnabled = false; // No image rendering in server mode
+        simulator.Initialize();
+
+        using var server = new WebSocketServer(simulator, port);
+
+        // Handle Ctrl+C to gracefully shutdown
+        Console.CancelKeyPress += (_, e) =>
+        {
+            e.Cancel = true;
+            Console.WriteLine("\nShutting down server...");
+            server.Stop();
+        };
+
+        Console.WriteLine("Press Ctrl+C to stop the server.");
+        Console.WriteLine("Connect the GUI viewer to ws://localhost:" + port + "/ws");
+
+        await server.StartAsync();
     }
 
     /// <summary>
