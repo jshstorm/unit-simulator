@@ -74,7 +74,7 @@ The simulator supports loading a specific frame from JSON and resuming from that
 
 ```csharp
 // Load simulation state from a saved frame
-var frameData = FrameData.LoadFromJson("output/debug/frame_0100.json");
+var frameData = FrameData.LoadFromJsonFile("output/debug/frame_0100.json");
 
 // Create simulator and set state
 var simulator = new SimulatorCore();

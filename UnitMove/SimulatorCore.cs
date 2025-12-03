@@ -296,7 +296,7 @@ public class SimulatorCore
     /// <returns>The frame data for this step.</returns>
     public FrameData Step(ISimulatorCallbacks? callbacks = null)
     {
-        if (!_isInitialized)
+        if (!_isInitialized || _waveManager == null)
         {
             throw new InvalidOperationException("Simulator must be initialized before stepping. Call Initialize() first.");
         }
@@ -313,12 +313,13 @@ public class SimulatorCore
         _squadBehavior.UpdateFriendlySquad(_friendlySquad, _enemySquad, _mainTarget);
 
         // Generate frame data (separate from rendering)
+        // Note: _waveManager is guaranteed non-null due to the check above
         var frameData = FrameData.FromSimulationState(
             _currentFrame,
             _friendlySquad,
             _enemySquad,
             _mainTarget,
-            _waveManager!
+            _waveManager
         );
 
         // Notify callbacks of frame generation
@@ -327,7 +328,7 @@ public class SimulatorCore
         // Render frame image if enabled
         if (_renderingEnabled && _renderer != null)
         {
-            _renderer.GenerateFrame(_currentFrame, _friendlySquad, _enemySquad, _mainTarget, _waveManager!);
+            _renderer.GenerateFrame(_currentFrame, _friendlySquad, _enemySquad, _mainTarget, _waveManager);
         }
 
         // Advance frame counter
