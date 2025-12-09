@@ -95,7 +95,7 @@ function SimulationCanvas({
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const { x: canvasX, y: canvasY } = getCanvasPixelCoords(e.clientX, e.clientY);
-    const { zoom, panX, panY } = viewRef.current;
+    const { zoom } = viewRef.current;
 
     const worldPos = canvasToWorld(canvasX, canvasY);
 
