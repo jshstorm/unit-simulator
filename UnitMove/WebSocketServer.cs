@@ -734,6 +734,21 @@ public class WebSocketServer : IDisposable
         _playCts?.Cancel();
         _simulator.Stop();
         
+        // Save session log when stopping
+        try
+        {
+            if (_sessionLogger != null)
+            {
+                _sessionLogger.EndSession("Server stopped");
+                var logPath = _sessionLogger.SaveToDefaultLocation();
+                Console.WriteLine($"[WebSocketServer] Session log saved: {logPath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[WebSocketServer] Failed to save session log: {ex.Message}");
+        }
+        
         try
         {
             if (_httpListener.IsListening)
@@ -766,19 +781,12 @@ public class WebSocketServer : IDisposable
         if (_disposed) return;
         _disposed = true;
         
-        // Save session log before shutting down
-        try
+        // Don't save session log in Dispose if it was already saved in Stop
+        if (_isRunning)
         {
-            _sessionLogger.EndSession("Server disposed");
-            var logPath = _sessionLogger.SaveToDefaultLocation();
-            Console.WriteLine($"[WebSocketServer] Session log saved: {logPath}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[WebSocketServer] Failed to save session log: {ex.Message}");
+            Stop();
         }
         
-        Stop();
         _cts.Dispose();
         
         try
