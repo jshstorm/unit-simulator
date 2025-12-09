@@ -48,6 +48,7 @@ export type MessageType =
   | 'unit_event'
   | 'simulation_complete'
   | 'command_ack'
+  | 'session_log_summary'
   | 'error';
 
 export interface WebSocketMessage {
@@ -115,9 +116,9 @@ export interface Command {
 // Session logging types
 export interface SessionSummary {
   sessionId: string;
-  startTime: string;
-  endTime?: string;
-  duration: string;
+  startTime: string; // ISO 8601 timestamp
+  endTime?: string; // ISO 8601 timestamp
+  duration: string; // TimeSpan format: HH:mm:ss.fffffff (e.g., "00:00:05.1234567")
   totalEvents: number;
   eventCounts: Record<string, number>;
 }

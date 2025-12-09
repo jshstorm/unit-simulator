@@ -737,12 +737,9 @@ public class WebSocketServer : IDisposable
         // Save session log when stopping
         try
         {
-            if (_sessionLogger != null)
-            {
-                _sessionLogger.EndSession("Server stopped");
-                var logPath = _sessionLogger.SaveToDefaultLocation();
-                Console.WriteLine($"[WebSocketServer] Session log saved: {logPath}");
-            }
+            _sessionLogger.EndSession("Server stopped");
+            var logPath = _sessionLogger.SaveToDefaultLocation();
+            Console.WriteLine($"[WebSocketServer] Session log saved: {logPath}");
         }
         catch (Exception ex)
         {
