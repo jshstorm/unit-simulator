@@ -26,6 +26,7 @@ public class WebSocketServer : IDisposable
     private readonly List<FrameData> _frameHistory = new();
     private readonly object _historyLock = new();
     private const int MaxHistoryFrames = 5000;
+    private readonly SessionLogger _sessionLogger;
 
     private bool IsPlaying => _playTask != null && !_playTask.IsCompleted && _playCts is { IsCancellationRequested: false };
 
@@ -41,6 +42,9 @@ public class WebSocketServer : IDisposable
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
         };
+
+        _sessionLogger = new SessionLogger();
+        Console.WriteLine($"[WebSocketServer] Session started: {_sessionLogger.SessionId}");
     }
 
     /// <summary>
@@ -259,6 +263,9 @@ public class WebSocketServer : IDisposable
         }
 
         var cmdType = cmdTypeElement.GetString();
+        
+        // Log the command
+        _sessionLogger.LogCommand(cmdType ?? "unknown", commandData);
 
         switch (cmdType)
         {
@@ -311,6 +318,10 @@ public class WebSocketServer : IDisposable
                 await HandleReviveCommandAsync(client, commandData);
                 break;
 
+            case "get_session_log":
+                await HandleGetSessionLogAsync(client);
+                break;
+
             default:
                 await SendToClientAsync(client, "error", $"Unknown command: {cmdType}");
                 break;
@@ -335,8 +346,8 @@ public class WebSocketServer : IDisposable
             RecordFrame(initialFrame);
         }
 
-        // Use callbacks that broadcast each frame
-        var callbacks = new WebSocketCallbacks(this);
+        // Use callbacks that broadcast each frame and log events
+        var callbacks = new CompositeCallbacks(new WebSocketCallbacks(this), _sessionLogger);
 
         _playCts?.Cancel();
         _playCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
@@ -372,6 +383,7 @@ public class WebSocketServer : IDisposable
             catch (Exception ex)
             {
                 Console.WriteLine($"[WebSocketServer] Simulation error: {ex.Message}");
+                _sessionLogger.LogError($"Simulation error: {ex.Message}", ex);
             }
             finally
             {
@@ -395,7 +407,7 @@ public class WebSocketServer : IDisposable
             _simulator.Initialize();
         }
 
-        var callbacks = new WebSocketCallbacks(this);
+        var callbacks = new CompositeCallbacks(new WebSocketCallbacks(this), _sessionLogger);
         _simulator.Step(callbacks);
     }
 
@@ -553,6 +565,20 @@ public class WebSocketServer : IDisposable
         return true;
     }
 
+    private async Task HandleGetSessionLogAsync(WebSocket client)
+    {
+        try
+        {
+            var summary = _sessionLogger.GetSummary();
+            await SendToClientAsync(client, "session_log_summary", summary);
+        }
+        catch (Exception ex)
+        {
+            _sessionLogger.LogError($"Failed to get session log: {ex.Message}", ex);
+            await SendToClientAsync(client, "error", $"Failed to get session log: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// Broadcasts the current frame data to all connected clients.
     /// </summary>
@@ -637,7 +663,7 @@ public class WebSocketServer : IDisposable
             _simulator.Initialize();
         }
 
-        var callbacks = new WebSocketCallbacks(this);
+        var callbacks = new CompositeCallbacks(new WebSocketCallbacks(this), _sessionLogger);
         FrameData? reached = null;
 
         while (true)
@@ -708,6 +734,18 @@ public class WebSocketServer : IDisposable
         _playCts?.Cancel();
         _simulator.Stop();
         
+        // Save session log when stopping
+        try
+        {
+            _sessionLogger.EndSession("Server stopped");
+            var logPath = _sessionLogger.SaveToDefaultLocation();
+            Console.WriteLine($"[WebSocketServer] Session log saved: {logPath}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[WebSocketServer] Failed to save session log: {ex.Message}");
+        }
+        
         try
         {
             if (_httpListener.IsListening)
@@ -740,7 +778,12 @@ public class WebSocketServer : IDisposable
         if (_disposed) return;
         _disposed = true;
         
-        Stop();
+        // Don't save session log in Dispose if it was already saved in Stop
+        if (_isRunning)
+        {
+            Stop();
+        }
+        
         _cts.Dispose();
         
         try
@@ -780,6 +823,51 @@ public class WebSocketServer : IDisposable
         public void OnUnitEvent(UnitEventData eventData)
         {
             Task.Run(async () => await _server.BroadcastAsync("unit_event", eventData));
+        }
+    }
+
+    /// <summary>
+    /// Composite callback that forwards events to multiple callback handlers.
+    /// </summary>
+    private class CompositeCallbacks : ISimulatorCallbacks
+    {
+        private readonly ISimulatorCallbacks[] _callbacks;
+
+        public CompositeCallbacks(params ISimulatorCallbacks[] callbacks)
+        {
+            _callbacks = callbacks;
+        }
+
+        public void OnFrameGenerated(FrameData frameData)
+        {
+            foreach (var callback in _callbacks)
+            {
+                callback.OnFrameGenerated(frameData);
+            }
+        }
+
+        public void OnSimulationComplete(int finalFrameNumber, string reason)
+        {
+            foreach (var callback in _callbacks)
+            {
+                callback.OnSimulationComplete(finalFrameNumber, reason);
+            }
+        }
+
+        public void OnStateChanged(string changeDescription)
+        {
+            foreach (var callback in _callbacks)
+            {
+                callback.OnStateChanged(changeDescription);
+            }
+        }
+
+        public void OnUnitEvent(UnitEventData eventData)
+        {
+            foreach (var callback in _callbacks)
+            {
+                callback.OnUnitEvent(eventData);
+            }
         }
     }
 }
