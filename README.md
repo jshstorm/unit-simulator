@@ -40,44 +40,43 @@ dotnet run
 
 실행이 완료되면, `output` 디렉터리에 시뮬레이션의 각 프레임이 `frame_xxxx.png` 형식의 이미지 파일로 저장됩니다.
 
+### 웹 대시보드(GUI) 실행
+
+실시간 WebSocket 서버와 웹 기반 GUI를 함께 실행하여 대시보드를 띄울 수 있습니다.
+
+**전제 조건**
+- .NET SDK 설치
+- Node.js/npm 설치
+
+**실행 순서**
+1) WebSocket 서버 실행:
+```bash
+dotnet run --project UnitMove -- --server --port 5000
+```
+
+2) GUI 실행:
+```bash
+cd gui-viewer
+npm install
+npm run dev
+```
+
+3) 브라우저 접속:
+- `http://localhost:5173` (상단 상태가 Connected이면 성공)
+
+**참고**
+- 기본 WebSocket 주소: `ws://localhost:5000/ws`
+- 필요 시 `gui-viewer/src/App.tsx`에서 변경 가능합니다.
+
 ### 동영상 생성
 
-생성된 이미지 프레임들을 동영상으로 변환하려면, [FFmpeg](https://ffmpeg.org/)가 설치되어 있어야 합니다. 다음 명령어를 프로젝트 루트 디렉터리에서 실행하여 `output.mp4`라는 이름의 동영상 파일을 생성할 수 있습니다:
-
-```bash
-ffmpeg -framerate 60 -i output/frame_%04d.png -c:v libx264 -pix_fmt yuv420p output.mp4
-```
+프레임 이미지를 동영상으로 변환하는 방법은 문서를 참고하세요:
+- `docs/video-export.md`
 
 ### Google Sheets to XML 변환
 
-Google Sheets 스프레드시트의 데이터를 XML 파일로 변환하려면 `sheet-to-xml` 명령어를 사용합니다:
-
-```bash
-dotnet run -- sheet-to-xml --sheet-id <SPREADSHEET_ID> --output <OUTPUT_DIR>
-```
-
-**옵션:**
-- `--sheet-id, -s <ID>`: Google Spreadsheet ID (필수, URL에서 확인 가능)
-- `--output, -o <DIR>`: XML 파일을 저장할 디렉토리 (기본값: ./xml_output)
-- `--credentials, -c <PATH>`: Google 서비스 계정 인증 JSON 파일 경로 (기본값: GOOGLE_APPLICATION_CREDENTIALS 환경 변수 또는 ./credentials.json)
-- `--help, -h`: 도움말 표시
-
-**예시:**
-```bash
-# 기본 사용법
-dotnet run -- sheet-to-xml -s 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
-
-# 출력 디렉토리 및 인증 파일 지정
-dotnet run -- sheet-to-xml -s 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms -o ./my_xml -c ./my-credentials.json
-```
-
-**사전 준비:**
-1. [Google Cloud Console](https://console.cloud.google.com/)에서 프로젝트 생성
-2. Google Sheets API 활성화
-3. 서비스 계정 생성 및 JSON 키 파일 다운로드
-4. 스프레드시트에 서비스 계정 이메일 공유 권한 부여
-
-서비스 계정 인증 파일 템플릿은 `credentials.example.json`을 참조하세요.
+Google Sheets 스프레드시트의 데이터를 XML 파일로 변환하는 방법은 문서를 참고하세요:
+- `docs/sheet-to-xml.md`
 
 ## 의존성
 
@@ -91,43 +90,18 @@ dotnet run -- sheet-to-xml -s 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms -o ./
 
 ## 품질 보증 (Quality Assurance)
 
-이 프로젝트는 GitHub Actions를 사용한 CI(Continuous Integration) 파이프라인을 통해 코드의 무결성을 자동으로 검증합니다. Pull Request나 Push가 발생할 때마다 빌드가 정상적으로 수행되는지 확인합니다.
+CI 및 로컬 빌드 확인 방법은 개발 가이드를 참고하세요:
+- `docs/development-guide.md`
 
-### Linux/macOS
+## 문서
 
-로컬 환경에서 빌드 상태를 확인하려면 다음 명령어를 실행하세요:
-```bash
-./ci-check.sh
-```
-
-### Windows (PowerShell)
-
-Windows 환경에서 빌드 상태를 확인하려면 PowerShell에서 다음 명령어를 실행하세요:
-```powershell
-.\ci-check.ps1
-```
-
-## .NET SDK 설치
-
-이 프로젝트를 실행하기 위해서는 .NET SDK가 설치되어 있어야 합니다. CI 환경이나 자동화된 설치가 필요한 경우 아래 스크립트를 사용할 수 있습니다.
-
-### Linux/macOS
-
-```bash
-./dotnet-install.sh --channel LTS
-```
-
-### Windows (PowerShell)
-
-```powershell
-.\dotnet-install.ps1 -Channel LTS
-```
-
-**주요 옵션:**
-- `-Channel`: 설치할 .NET 채널 (LTS, STS, 8.0, 9.0 등)
-- `-Version`: 설치할 특정 버전 (latest, 8.0.100 등)
-- `-InstallDir`: 설치 디렉터리
-- `-Architecture`: 아키텍처 (x64, x86, arm64)
-- `-Help`: 전체 도움말 표시
-
-> **참고**: 개발 환경 설정이나 일반적인 앱 실행을 위해서는 [.NET 공식 웹사이트](https://dotnet.microsoft.com/download)에서 설치 프로그램을 다운로드하여 사용하는 것을 권장합니다.
+| 문서 | 설명 |
+|------|------|
+| [시뮬레이션 스펙](docs/simulation-spec.md) | 유닛 행동 규칙, 전투 로직, 회피 시스템 등 도메인 스펙 |
+| [개발 가이드](docs/development-guide.md) | 개발 인프라, WebSocket 서버, GUI 연동 가이드 |
+| [GUI 뷰어](docs/gui-viewer.md) | 웹 기반 GUI 뷰어 프로토타입 |
+| [Sheet to XML](docs/sheet-to-xml.md) | Google Sheets → XML 변환 사용법 |
+| [동영상 생성](docs/video-export.md) | 프레임 이미지 → 동영상 변환 |
+| [세션 로깅](docs/session-logging.md) | WebSocket 세션 디버깅 로깅 기능 |
+| [ReferenceModels](ReferenceModels/README.md) | Google Sheets ↔ C# 모델 매핑 규칙 |
+| [Dev Tool](dev-tool/README.md) | 개발 도구 설계 및 계획 |

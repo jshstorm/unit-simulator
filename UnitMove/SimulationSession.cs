@@ -90,14 +90,24 @@ public class SimulationSession : IDisposable
         }
     }
 
+    /// <summary>
+    /// Output directory for this session's files.
+    /// </summary>
+    public string OutputDirectory { get; }
+
     public SimulationSession(string? sessionId = null)
     {
         SessionId = sessionId ?? Guid.NewGuid().ToString();
         CreatedAt = DateTime.UtcNow;
         LastActivityAt = DateTime.UtcNow;
 
+        // Set session-specific output directory
+        OutputDirectory = Path.Combine(Constants.OUTPUT_DIRECTORY, SessionId);
+
         Simulator = new SimulatorCore();
-        Logger = new SessionLogger();
+        Simulator.OutputDirectory = OutputDirectory;
+
+        Logger = new SessionLogger(SessionId, OutputDirectory);
 
         _jsonOptions = new JsonSerializerOptions
         {

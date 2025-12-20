@@ -94,6 +94,12 @@ public class SimulatorCore
     /// </summary>
     private bool _renderingEnabled = true;
 
+    /// <summary>
+    /// The output directory for this simulation instance.
+    /// Defaults to Constants.OUTPUT_DIRECTORY but can be overridden for session isolation.
+    /// </summary>
+    private string _outputDirectory = Constants.OUTPUT_DIRECTORY;
+
     // ================================================================================
     // Public properties for external access
     // ================================================================================
@@ -121,6 +127,17 @@ public class SimulatorCore
     {
         get => _renderingEnabled;
         set => _renderingEnabled = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the output directory for this simulation instance.
+    /// Set this before calling Initialize() to use a custom directory.
+    /// Used for session isolation in multi-session mode.
+    /// </summary>
+    public string OutputDirectory
+    {
+        get => _outputDirectory;
+        set => _outputDirectory = value;
     }
 
     /// <summary>
@@ -167,8 +184,8 @@ public class SimulatorCore
         // Create wave manager with enemy ID provider
         _waveManager = new WaveManager(GetNextEnemyId);
 
-        // Create renderer for image generation
-        _renderer = new Renderer();
+        // Create renderer for image generation (pass output directory for session isolation)
+        _renderer = new Renderer(_outputDirectory);
 
         // Spawn the first wave of enemies
         _waveManager.SpawnNextWave(_enemySquad);
@@ -181,24 +198,28 @@ public class SimulatorCore
 
     /// <summary>
     /// Sets up the output directory structure for the simulation.
+    /// Uses the OutputDirectory property which can be customized for session isolation.
     /// </summary>
     private void SetupEnvironment()
     {
         try
         {
+            var debugDirPath = Path.Combine(_outputDirectory, Constants.DEBUG_SUBDIRECTORY);
+
             if (!_renderingEnabled)
             {
-                // When rendering is off (e.g., WebSocket server mode), we don't need output dirs
-                Console.WriteLine("Rendering disabled; skipping output directory setup.");
+                // When rendering is off (e.g., WebSocket server mode), we still create dirs for logs
+                Directory.CreateDirectory(debugDirPath);
+                Console.WriteLine($"Output directory setup: {_outputDirectory}");
                 return;
             }
 
-            var dirInfo = new DirectoryInfo(Constants.OUTPUT_DIRECTORY);
+            var dirInfo = new DirectoryInfo(_outputDirectory);
             if (dirInfo.Exists) dirInfo.Delete(true);
             dirInfo.Create();
 
-            var debugDirPath = Path.Combine(Constants.OUTPUT_DIRECTORY, Constants.DEBUG_SUBDIRECTORY);
             Directory.CreateDirectory(debugDirPath);
+            Console.WriteLine($"Output directory setup: {_outputDirectory}");
         }
         catch (Exception ex)
         {
@@ -291,8 +312,8 @@ public class SimulatorCore
         }
 
         _isRunning = false;
-        Console.WriteLine($"\nFinished generating frames in '{Constants.OUTPUT_DIRECTORY}'.");
-        Console.WriteLine($"ffmpeg -framerate 60 -i {Path.Combine(Constants.OUTPUT_DIRECTORY, "frame_%04d.png")} -c:v libx264 -pix_fmt yuv420p output.mp4");
+        Console.WriteLine($"\nFinished generating frames in '{_outputDirectory}'.");
+        Console.WriteLine($"ffmpeg -framerate 60 -i {Path.Combine(_outputDirectory, "frame_%04d.png")} -c:v libx264 -pix_fmt yuv420p output.mp4");
     }
 
     /// <summary>

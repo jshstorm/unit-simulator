@@ -91,9 +91,11 @@ public class Renderer
     private Font? _font;
     private Font? _labelFont;
     private static readonly JsonSerializerOptions DebugJsonOptions = new() { WriteIndented = true };
+    private string _outputDirectory;
 
-    public Renderer()
+    public Renderer(string? outputDirectory = null)
     {
+        _outputDirectory = outputDirectory ?? Constants.OUTPUT_DIRECTORY;
         InitializeFont();
     }
 
@@ -111,7 +113,7 @@ public class Renderer
                     DrawUnits(ctx, friendlies, enemies);
                 });
 
-                string filePath = System.IO.Path.Combine(Constants.OUTPUT_DIRECTORY, $"frame_{frameNumber:D4}.png");
+                string filePath = System.IO.Path.Combine(_outputDirectory, $"frame_{frameNumber:D4}.png");
                 image.Save(filePath);
             }
 
@@ -144,7 +146,7 @@ public class Renderer
                 friendlies.Select(CreateUnitDebug).ToList(),
                 enemies.Select(CreateUnitDebug).ToList());
 
-            var debugDir = System.IO.Path.Combine(Constants.OUTPUT_DIRECTORY, Constants.DEBUG_SUBDIRECTORY);
+            var debugDir = System.IO.Path.Combine(_outputDirectory, Constants.DEBUG_SUBDIRECTORY);
             System.IO.Directory.CreateDirectory(debugDir);
             var debugPath = System.IO.Path.Combine(debugDir, $"frame_{frameNumber:D4}.json");
             var payload = JsonSerializer.Serialize(info, DebugJsonOptions);

@@ -93,6 +93,47 @@ simulator.ModifyUnit(unitId, faction, unit => {
 - 렌더링은 필요 시에만 켜고, 회귀는 JSON 프레임으로 비교.
 - 콜백 오버헤드를 줄이기 위해 필요한 이벤트만 송신.
 
+## 품질 보증 (Quality Assurance)
+
+이 프로젝트는 GitHub Actions를 사용한 CI 파이프라인으로 빌드 무결성을 검증합니다. 로컬에서 확인하려면 아래 스크립트를 사용하세요.
+
+### Linux/macOS
+
+```bash
+./ci-check.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+.\ci-check.ps1
+```
+
+## .NET SDK 설치
+
+CI 환경이나 자동 설치가 필요하면 아래 스크립트를 사용할 수 있습니다.
+
+### Linux/macOS
+
+```bash
+./dotnet-install.sh --channel LTS
+```
+
+### Windows (PowerShell)
+
+```powershell
+.\dotnet-install.ps1 -Channel LTS
+```
+
+**주요 옵션:**
+- `-Channel`: 설치할 .NET 채널 (LTS, STS, 8.0, 9.0 등)
+- `-Version`: 설치할 특정 버전 (latest, 8.0.100 등)
+- `-InstallDir`: 설치 디렉터리
+- `-Architecture`: 아키텍처 (x64, x86, arm64)
+- `-Help`: 전체 도움말 표시
+
+> **참고**: 일반 개발 환경에는 [.NET 공식 웹사이트](https://dotnet.microsoft.com/download) 설치 프로그램 사용을 권장합니다.
+
 ## 파일 구조(요약)
 
 ```

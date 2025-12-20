@@ -293,6 +293,37 @@ public enum SessionCleanupPolicy
 | 역할 분리 | Owner(수정 권한) / Viewer(읽기 전용) |
 | 소유권 관리 | Client ID 기반 (Option C) |
 | Owner 연결 해제 시 | 세션 유지, 시뮬레이션 정지 상태, 명령 불가 |
+| 세션 출력 디렉토리 | `output/{sessionId}/` 하위에 생성 |
+
+## 세션별 출력 디렉토리 구조
+
+각 세션의 결과 파일(프레임 이미지, 로그 등)은 세션 UUID를 기반으로 한 독립된 디렉토리에 저장됩니다.
+이를 통해 여러 세션이 동시에 실행되어도 파일 충돌이 발생하지 않습니다.
+
+### 디렉토리 구조
+
+```
+output/
+├── {session-uuid-1}/
+│   ├── frame_0000.png
+│   ├── frame_0001.png
+│   ├── ...
+│   └── debug/
+│       └── session_{session-uuid-1}_{timestamp}.json
+├── {session-uuid-2}/
+│   ├── frame_0000.png
+│   ├── ...
+│   └── debug/
+│       └── session_{session-uuid-2}_{timestamp}.json
+└── ...
+```
+
+### 구현 규칙
+
+1. **세션 생성 시**: `output/{sessionId}/` 디렉토리 자동 생성
+2. **프레임 이미지**: `output/{sessionId}/frame_{frameNumber:D4}.png`
+3. **세션 로그**: `output/{sessionId}/debug/session_{sessionId}_{timestamp}.json`
+4. **세션 종료 시**: 디렉토리는 유지 (수동 삭제 또는 정책에 따라 정리)
 
 ## 역할 기반 권한 모델
 

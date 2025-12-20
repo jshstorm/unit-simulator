@@ -1,0 +1,14 @@
+{
+  "name": "unit-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"dotnet run --project UnitMove -- --server\" \"npm run dev --prefix gui-viewer\"",
+    "build": "dotnet build UnitMove && npm run build --prefix gui-viewer",
+    "server": "dotnet run --project UnitMove -- --server",
+    "client": "npm run dev --prefix gui-viewer"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

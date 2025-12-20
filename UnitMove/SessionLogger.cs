@@ -14,6 +14,7 @@ public class SessionLogger : ISimulatorCallbacks
     private readonly List<SessionEvent> _events = new();
     private readonly object _lock = new();
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly string? _outputDirectory;
 
     /// <summary>
     /// Gets the session ID.
@@ -24,13 +25,16 @@ public class SessionLogger : ISimulatorCallbacks
     /// Initializes a new session logger.
     /// </summary>
     /// <param name="sessionId">Optional session ID. If not provided, a new GUID will be generated.</param>
-    public SessionLogger(string? sessionId = null)
+    /// <param name="outputDirectory">Optional output directory for session logs. If not provided, uses default.</param>
+    public SessionLogger(string? sessionId = null, string? outputDirectory = null)
     {
         _metadata = new SessionMetadata
         {
             SessionId = sessionId ?? Guid.NewGuid().ToString(),
             StartTime = DateTime.UtcNow
         };
+
+        _outputDirectory = outputDirectory;
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -168,17 +172,23 @@ public class SessionLogger : ISimulatorCallbacks
 
     /// <summary>
     /// Saves the session log to a default location based on session ID.
+    /// Uses the session's output directory if configured, otherwise uses the global default.
     /// </summary>
-    /// <param name="outputDirectory">The output directory. Defaults to "./output/debug".</param>
+    /// <param name="outputDirectory">Optional override for the output directory.</param>
     /// <returns>The path where the file was saved.</returns>
     public string SaveToDefaultLocation(string? outputDirectory = null)
     {
-        outputDirectory ??= Path.Combine(Constants.OUTPUT_DIRECTORY, Constants.DEBUG_SUBDIRECTORY);
-        Directory.CreateDirectory(outputDirectory);
+        // Priority: parameter > instance field > global default
+        var targetDir = outputDirectory
+            ?? (_outputDirectory != null
+                ? Path.Combine(_outputDirectory, Constants.DEBUG_SUBDIRECTORY)
+                : Path.Combine(Constants.OUTPUT_DIRECTORY, Constants.DEBUG_SUBDIRECTORY));
+
+        Directory.CreateDirectory(targetDir);
 
         var fileName = $"session_{_metadata.SessionId}_{_metadata.StartTime:yyyyMMdd_HHmmss}.json";
-        var filePath = Path.Combine(outputDirectory, fileName);
-        
+        var filePath = Path.Combine(targetDir, fileName);
+
         SaveToFile(filePath);
         return filePath;
     }
