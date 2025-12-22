@@ -45,12 +45,15 @@ RTS 게임 코어 완성 및 게임 엔진 통합을 위한 개발 마일스톤 
 
 ```
 unit-simulator/
-├── UnitMove/              # RTS 시뮬레이션 코어 + 개발 서버
+├── UnitSimulator.Core/    # 순수 시뮬레이션 코어
 │   ├── SimulatorCore.cs   # 핵심 시뮬레이션 엔진
 │   ├── Unit.cs            # 유닛 상태/행동
-│   ├── SquadBehavior.cs   # 아군 AI
-│   ├── EnemyBehavior.cs   # 적군 AI
-│   ├── WaveManager.cs     # 웨이브 시스템
+│   ├── Behaviors/         # Squad/Enemy AI
+│   └── Commands/          # Command Queue 구조
+│
+├── UnitSimulator.Server/  # 개발 서버/렌더링
+│   ├── WaveManager.cs     # 웨이브 명령 생성
+│   ├── Renderer.cs        # ImageSharp 렌더링
 │   ├── WebSocketServer.cs # 개발용 서버
 │   └── Session*.cs        # 멀티세션 지원
 │
@@ -73,13 +76,14 @@ unit-simulator/
 - [x] 멀티세션 지원
 - [x] 세션별 output 격리
 - [x] GUI 시각화 도구
+- [x] 코어/서버 분리 (M1.1)
+- [x] 렌더링 의존성 제거 (M1.2)
 
 ### 2.3 미완료/개선 필요
 
-- [ ] 코어와 인프라 코드 분리
-- [ ] 렌더링 의존성 제거 (ImageSharp)
+- [ ] 인터페이스 계약 정의 (M1.3)
+- [ ] 유닛 테스트 구축 (M1.4)
 - [ ] 데이터 스키마 표준화
-- [ ] 유닛 테스트
 - [ ] 게임 엔진 통합
 
 ---
@@ -353,7 +357,7 @@ dotnet add UnitSimulator.Server reference UnitSimulator.Core
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>UnitSimulator.Core</RootNamespace>
@@ -367,7 +371,7 @@ dotnet add UnitSimulator.Server reference UnitSimulator.Core
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>UnitSimulator.Server</RootNamespace>
@@ -476,12 +480,12 @@ public interface IFrameRenderer
 **출력**: 렌더링 로직이 Server로 이동된 프로젝트
 
 **완료 조건**:
-- [ ] WaveManager.cs에서 Renderer 클래스 분리 (Server/Renderer.cs)
-- [ ] SimulatorCore.cs에서 Renderer 참조 제거
-- [ ] Core 프로젝트에 ImageSharp 참조 없음
-- [ ] Core의 csproj에서 SixLabors.* 패키지 제거
-- [ ] 렌더링은 Server에서 ISimulatorCallbacks를 통해 처리
-- [ ] 기존 렌더링 기능 동작 확인
+- [x] WaveManager.cs에서 Renderer 클래스 분리 (Server/Renderer.cs)
+- [x] SimulatorCore.cs에서 Renderer 참조 제거
+- [x] Core 프로젝트에 ImageSharp 참조 없음
+- [x] Core의 csproj에서 SixLabors.* 패키지 제거
+- [x] 렌더링은 Server에서 ISimulatorCallbacks를 통해 처리
+- [x] 기존 렌더링 기능 동작 확인
 
 ---
 
