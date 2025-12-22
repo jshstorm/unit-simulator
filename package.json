@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n server,client -c blue,green \"dotnet run --project UnitMove -- --server\" \"npm run dev --prefix gui-viewer\"",
-    "build": "dotnet build UnitMove && npm run build --prefix gui-viewer",
+    "dev": "concurrently -n server,client -c blue,green \"dotnet run --project UnitMove -- --server\" \"npm run dev --prefix sim-studio\"",
+    "build": "dotnet build UnitMove && npm run build --prefix sim-studio",
     "server": "dotnet run --project UnitMove -- --server",
-    "client": "npm run dev --prefix gui-viewer"
+    "client": "npm run dev --prefix sim-studio"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

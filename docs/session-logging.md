@@ -156,7 +156,7 @@ Verify that:
 - Unit events are triggered appropriately
 - Simulation completes under the right conditions
 
-## Integration with GUI Viewer
+## Integration with Sim Studio
 
 The GUI viewer can request session logs through the `get_session_log` command to display debugging information in the UI. This complements the client-side frame logging implemented in PR #14.
 

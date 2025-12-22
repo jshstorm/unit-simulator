@@ -60,7 +60,7 @@ unit-simulator/
 ├── ReferenceModels/       # 데이터 드리븐 모듈
 │   └── (Google Sheets 연동)
 │
-├── gui-viewer/            # React 기반 개발 도구
+├── sim-studio/            # React 기반 개발 도구
 │   └── (시뮬레이션 시각화/디버깅)
 │
 ├── dev-tool/              # 개발 인프라
@@ -785,7 +785,7 @@ npm run data:build    # 전체 파이프라인
                                                      │
                               ┌──────────────────────┼──────────────────────┐
                               ▼                      ▼                      ▼
-                        UnitSimulator.Core    Unity/Godot/Unreal    gui-viewer
+                        UnitSimulator.Core    Unity/Godot/Unreal    sim-studio
 ```
 
 **입력**: M2.1 스키마
@@ -855,7 +855,7 @@ namespace UnitSimulator.Core.Data
 - JSON을 **단일 소스**로 유지
 - React 기반 UI로 테이블/폼 뷰 제공
 - 스키마 검증(저장 전) + mtime/hash 기반 충돌 감지
-- 초기에는 **별도 앱으로 구성 후 안정화되면 gui-viewer에 통합**
+- 초기에는 **별도 앱으로 구성 후 안정화되면 sim-studio에 통합**
 
 **완료 조건**:
 - [ ] JSON 데이터 목록/조회/수정/추가/삭제 가능

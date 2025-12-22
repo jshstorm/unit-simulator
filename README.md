@@ -56,7 +56,7 @@ dotnet run --project UnitMove -- --server --port 5000
 
 2) GUI 실행:
 ```bash
-cd gui-viewer
+cd sim-studio
 npm install
 npm run dev
 ```
@@ -66,7 +66,7 @@ npm run dev
 
 **참고**
 - 기본 WebSocket 주소: `ws://localhost:5000/ws`
-- 필요 시 `gui-viewer/src/App.tsx`에서 변경 가능합니다.
+- 필요 시 `sim-studio/src/App.tsx`에서 변경 가능합니다.
 
 ### 동영상 생성
 
@@ -99,7 +99,7 @@ CI 및 로컬 빌드 확인 방법은 개발 가이드를 참고하세요:
 |------|------|
 | [시뮬레이션 스펙](docs/simulation-spec.md) | 유닛 행동 규칙, 전투 로직, 회피 시스템 등 도메인 스펙 |
 | [개발 가이드](docs/development-guide.md) | 개발 인프라, WebSocket 서버, GUI 연동 가이드 |
-| [GUI 뷰어](docs/gui-viewer.md) | 웹 기반 GUI 뷰어 프로토타입 |
+| [Sim Studio](docs/sim-studio.md) | 웹 기반 시뮬레이션 스튜디오 |
 | [Sheet to XML](docs/sheet-to-xml.md) | Google Sheets → XML 변환 사용법 |
 | [동영상 생성](docs/video-export.md) | 프레임 이미지 → 동영상 변환 |
 | [세션 로깅](docs/session-logging.md) | WebSocket 세션 디버깅 로깅 기능 |

@@ -1,6 +1,6 @@
-# Web-based GUI Viewer Prototype
+# Web-based Sim Studio Prototype
 
-This document outlines a prototype implementation of a web-based GUI viewer for the simulation. This serves as a foundation for further enhancements.
+This document outlines a prototype implementation of a web-based Sim Studio for the simulation. This serves as a foundation for further enhancements.
 
 ## Features
 
@@ -17,4 +17,4 @@ This document outlines a prototype implementation of a web-based GUI viewer for 
    - Allows users to issue commands for units to move or interact with the simulation environment.
 
 ## Further Developments
-This prototype lays the groundwork for future enhancements and features that can be integrated into the GUI viewer to improve user interaction and simulation management.
+This prototype lays the groundwork for future enhancements and features that can be integrated into the Sim Studio to improve user interaction and simulation management.

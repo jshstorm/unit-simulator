@@ -1,6 +1,6 @@
 # 개발 인프라 및 GUI 연동 가이드
 
-이 문서는 Unit Simulator 코어와 웹 기반 GUI 뷰어(편집 기능 포함)를 유지·확장할 때의 구조, 규칙, 그리고 실행 방법을 정리합니다. 기존 영문 내용을 한국어로 옮기고, 최근 실시간 플레이/일시정지(Play/Pause) 흐름을 반영했습니다.
+이 문서는 Unit Simulator 코어와 웹 기반 Sim Studio(편집 기능 포함)를 유지·확장할 때의 구조, 규칙, 그리고 실행 방법을 정리합니다. 기존 영문 내용을 한국어로 옮기고, 최근 실시간 플레이/일시정지(Play/Pause) 흐름을 반영했습니다.
 
 ## 개요
 
@@ -55,14 +55,14 @@
 - `move`/`set_health`/`kill`/`revive`: 특정 유닛 제어·수정
 - **캔버스 상호작용**: 드래그 패닝, 휠 줌 인/아웃, 클릭 이동/선택은 패닝/줌을 반영한 월드 좌표 기준으로 처리.
 
-## GUI 뷰어(웹, Vite + React)
+## Sim Studio(웹, Vite + React)
 
-- 기본 WebSocket 주소: `ws://localhost:5000/ws` (`gui-viewer/src/App.tsx`에서 변경 가능)
+- 기본 WebSocket 주소: `ws://localhost:5000/ws` (`sim-studio/src/App.tsx`에서 변경 가능)
 - **컨트롤**: Play/Pause, Step(재생 중 눌러도 일시정지 후 1프레임 진행), Step Back(한 프레임 이전으로), Seek(프레임 번호로 점프), Reset. 비디오 플레이어처럼 동작합니다.
 - **캔버스 내 네비게이션**: 드래그로 패닝, 마우스 휠로 줌 인/아웃(MIN_ZOOM~MAX_ZOOM). 패닝/줌은 클릭 이동/유닛 선택 등 모든 상호작용에 반영되며, 그리드는 뷰포트 범위에 맞춰 동적으로 이어서 그려집니다.
 - **실행**:
   1. `dotnet run --project UnitMove -- --server --port 5000`
-  2. `cd gui-viewer && npm install && npm run dev`
+  2. `cd sim-studio && npm install && npm run dev`
   3. 브라우저 `http://localhost:5173` 접속 → 상단 상태가 Connected면 성공
 
 ## 상태 주입/재생 예시
@@ -145,7 +145,7 @@ UnitMove/
 ├── Renderer.cs             # PNG 렌더링 (옵션)
 ├── EnemyBehavior.cs, SquadBehavior.cs, AvoidanceSystem.cs 등
 └── Constants.cs            # 설정 상수
-gui-viewer/                 # Vite + React GUI (Play/Pause/Step/Reset 컨트롤)
+sim-studio/                 # Vite + React GUI (Play/Pause/Step/Reset 컨트롤)
 ```
 
 ## 버전 히스토리(요약)

@@ -163,7 +163,7 @@ function App() {
     return (
       <div className="app">
         <header className="header">
-          <h1>Unit Simulator - GUI Viewer</h1>
+          <h1>Unit Simulator - Sim Studio</h1>
         </header>
         <SessionSelector
           apiBaseUrl={API_BASE_URL}
@@ -176,7 +176,7 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Unit Simulator - GUI Viewer</h1>
+        <h1>Unit Simulator - Sim Studio</h1>
         <div className="header-controls">
           <div className="session-info">
             {sessionId && (

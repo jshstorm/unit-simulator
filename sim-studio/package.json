@@ -1,8 +1,8 @@
 {
-  "name": "gui-viewer",
+  "name": "sim-studio",
   "version": "1.0.0",
   "type": "module",
-  "description": "Web-based GUI Viewer for Unit Simulator",
+  "description": "Web-based Sim Studio for Unit Simulator",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
