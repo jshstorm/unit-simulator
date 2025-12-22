@@ -78,10 +78,10 @@ unit-simulator/
 - [x] GUI 시각화 도구
 - [x] 코어/서버 분리 (M1.1)
 - [x] 렌더링 의존성 제거 (M1.2)
+- [x] 인터페이스 계약 정의 (M1.3)
 
 ### 2.3 미완료/개선 필요
 
-- [ ] 인터페이스 계약 정의 (M1.3)
 - [ ] 유닛 테스트 구축 (M1.4)
 - [ ] 데이터 스키마 표준화
 - [ ] 게임 엔진 통합
@@ -600,9 +600,9 @@ namespace UnitSimulator.Core.Contracts
 **출력**: `Contracts/` 디렉토리에 인터페이스 정의
 
 **완료 조건**:
-- [ ] 모든 공개 API가 인터페이스로 정의됨
-- [ ] XML 문서 주석 완비
-- [ ] 버전 관리 고려 (향후 확장성)
+- [x] 모든 공개 API가 인터페이스로 정의됨
+- [x] XML 문서 주석 완비
+- [x] 버전 관리 고려 (향후 확장성)
 
 ---
 
@@ -653,6 +653,33 @@ public void Simulation_SameInput_ProducesSameOutput()
 
 **입력**: M1.3 완료된 인터페이스
 **출력**: 테스트 프로젝트 및 80%+ 커버리지
+
+**실행 계획**:
+
+1) **테스트 프로젝트 구성**
+- `UnitSimulator.Core.Tests` 프로젝트 생성
+- `UnitSimulator.Core` 참조 추가
+- 테스트 프레임워크(xUnit) + `Microsoft.NET.Test.Sdk` 추가
+
+2) **공통 테스트 유틸 구축**
+- TestDataBuilder/Fixture로 유닛/웨이브 기본 데이터 생성
+- 공통 초기화 로직(`GameConfig`) 제공
+
+3) **핵심 단위 테스트 작성**
+- `FrameData` 직렬화/역직렬화 테스트
+- `Unit` 스탯/상태 전이 테스트
+- `SquadBehavior`/`EnemyBehavior` 결정론적 동작 검증
+
+4) **결정론 테스트**
+- 동일 커맨드 시퀀스 입력 시 결과 동일성 검증
+- `SimulationFacade` 경유 시 동일성 확인
+
+5) **통합 테스트**
+- 최소 웨이브 시나리오 전체 실행 검증
+- `ISimulationObserver` 이벤트 발생 확인
+
+6) **CI 연동**
+- `dotnet test UnitSimulator.Core.Tests`를 CI 스텝에 추가
 
 **완료 조건**:
 - [ ] 모든 공개 API 테스트 커버

@@ -28,7 +28,7 @@ if (-not $DotnetPath) {
 }
 
 Write-Host "--- 의존성 복원 시작 ---"
-& $DotnetPath restore
+& $DotnetPath restore UnitSimulator.sln
 if ($LASTEXITCODE -ne 0) {
     Write-Error "의존성 복원 실패"
     exit $LASTEXITCODE
@@ -38,7 +38,7 @@ Write-Host "--- 의존성 복원 완료 ---"
 Write-Host ""
 
 Write-Host "--- 프로젝트 빌드 시작 ---"
-& $DotnetPath build --no-restore
+& $DotnetPath build UnitSimulator.sln --no-restore
 if ($LASTEXITCODE -ne 0) {
     Write-Error "프로젝트 빌드 실패"
     exit $LASTEXITCODE
@@ -46,4 +46,13 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "--- 프로젝트 빌드 완료 ---"
 
 Write-Host ""
-Write-Host "CI 검증 성공: 프로젝트가 성공적으로 빌드되었습니다."
+Write-Host "--- 테스트 실행 시작 ---"
+& $DotnetPath test UnitSimulator.sln --no-build
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "테스트 실행 실패"
+    exit $LASTEXITCODE
+}
+Write-Host "--- 테스트 실행 완료 ---"
+
+Write-Host ""
+Write-Host "CI 검증 성공: 프로젝트가 성공적으로 빌드 및 테스트되었습니다."

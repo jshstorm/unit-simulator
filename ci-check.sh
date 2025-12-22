@@ -12,14 +12,19 @@ if [ ! -f "$DOTNET_PATH" ]; then
 fi
 
 echo "--- 의존성 복원 시작 ---"
-$DOTNET_PATH restore
+$DOTNET_PATH restore UnitSimulator.sln
 echo "--- 의존성 복원 완료 ---"
 
 echo ""
 
 echo "--- 프로젝트 빌드 시작 ---"
-$DOTNET_PATH build --no-restore
+$DOTNET_PATH build UnitSimulator.sln --no-restore
 echo "--- 프로젝트 빌드 완료 ---"
 
 echo ""
-echo "CI 검증 성공: 프로젝트가 성공적으로 빌드되었습니다."
+echo "--- 테스트 실행 시작 ---"
+$DOTNET_PATH test UnitSimulator.sln --no-build
+echo "--- 테스트 실행 완료 ---"
+
+echo ""
+echo "CI 검증 성공: 프로젝트가 성공적으로 빌드 및 테스트되었습니다."
