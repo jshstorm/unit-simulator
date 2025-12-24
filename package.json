@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n server,client -c blue,green \"dotnet run --project UnitMove -- --server\" \"npm run dev --prefix sim-studio\"",
-    "build": "dotnet build UnitMove && npm run build --prefix sim-studio",
-    "server": "dotnet run --project UnitMove -- --server",
+    "dev": "concurrently -n server,client -c blue,green \"dotnet run --project UnitSimulator.Server -- --server\" \"npm run dev --prefix sim-studio\"",
+    "build": "dotnet build UnitSimulator.Server && npm run build --prefix sim-studio",
+    "server": "dotnet run --project UnitSimulator.Server -- --server",
     "client": "npm run dev --prefix sim-studio"
   },
   "devDependencies": {
