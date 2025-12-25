@@ -259,8 +259,10 @@ public class Program
                 }
             }
 
-            enemyBehavior.UpdateEnemySquad(pathfindingSim, enemySquad, friendlySquad);
-            squadBehavior.UpdateFriendlySquad(pathfindingSim, friendlySquad, enemySquad, mainTarget);
+            var events = new FrameEvents();
+            enemyBehavior.UpdateEnemySquad(pathfindingSim, enemySquad, friendlySquad, events);
+            squadBehavior.UpdateFriendlySquad(pathfindingSim, friendlySquad, enemySquad, mainTarget, events);
+            pathfindingSim.ApplyFrameEvents(events);
 
             if (renderer != null)
             {

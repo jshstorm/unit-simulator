@@ -605,6 +605,17 @@ public class SimulatorCore
     }
 
     /// <summary>
+    /// 외부에서 수집된 FrameEvents를 일괄 적용합니다. (레거시 호환용)
+    /// </summary>
+    public void ApplyFrameEvents(FrameEvents events, ISimulatorCallbacks? callbacks = null)
+    {
+        callbacks ??= new DefaultSimulatorCallbacks();
+        ApplyDamageEvents(events);
+        ProcessDeaths(events, callbacks);
+        ApplySpawnEvents(events, callbacks);
+    }
+
+    /// <summary>
     /// 살아있는 모든 유닛을 반환합니다.
     /// </summary>
     private IEnumerable<Unit> GetAllLivingUnits()
