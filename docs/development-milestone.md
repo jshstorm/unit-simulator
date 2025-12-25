@@ -80,10 +80,11 @@ unit-simulator/
 - [x] 렌더링 의존성 제거 (M1.2)
 - [x] 인터페이스 계약 정의 (M1.3)
 - [x] 유닛 테스트 구축 (M1.4)
+- [x] Reference 시스템 구현 (데이터 드리븐 유닛 로딩)
 
 ### 2.3 미완료/개선 필요
 
-- [ ] 데이터 스키마 표준화
+- [ ] 데이터 스키마 표준화 (JSON Schema)
 - [ ] 게임 엔진 통합
 
 ---
@@ -725,6 +726,129 @@ public void Simulation_SameInput_ProducesSameOutput()
 
 ---
 
+### M1.6: Reference 시스템 (데이터 드리븐 로딩)
+
+**담당**: 코어 개발
+
+**상태**: ✅ 완료
+
+**작업 내용**:
+
+JSON 파일 기반의 데이터 드리븐 유닛 로딩 시스템 구현.
+
+**아키텍처**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Reference System                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  data/references/          ReferenceManager                  │
+│  ├── units.json    ───►   ├── RegisterHandler<T>()          │
+│  ├── waves.json            ├── LoadAll(path)                 │
+│  └── ...                   └── Units / Waves / ...           │
+│                                     │                        │
+│                                     ▼                        │
+│                            ReferenceTable<T>                 │
+│                            ├── Get(id)                       │
+│                            ├── TryGet(id, out T)             │
+│                            └── GetAll()                      │
+│                                     │                        │
+│                                     ▼                        │
+│                            UnitReference.CreateUnit()        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**디렉토리 구조**:
+
+```
+data/references/
+└── units.json          # 유닛 레퍼런스 데이터
+```
+
+**핵심 클래스**:
+
+| 클래스 | 역할 |
+|--------|------|
+| `ReferenceManager` | 테이블 로딩/관리 매니저 |
+| `ReferenceTable<T>` | 제네릭 읽기 전용 테이블 |
+| `UnitReference` | JSON 직렬화 가능한 유닛 정의 |
+| `AbilityReferenceData` | 어빌리티 데이터 (다형성 지원) |
+| `ReferenceHandlers` | JSON 파싱 핸들러 |
+
+**JSON 포맷 (Object 형식, ID as Key)**:
+
+```json
+{
+  "golem": {
+    "displayName": "Golem",
+    "maxHP": 5984,
+    "damage": 270,
+    "moveSpeed": 2.0,
+    "attackRange": 60,
+    "radius": 40,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "DeathSpawn", "spawnUnitId": "golemite", "spawnCount": 2, "spawnRadius": 30 },
+      { "type": "DeathDamage", "damage": 270, "radius": 60 }
+    ]
+  }
+}
+```
+
+**사용 예시**:
+
+```csharp
+// 초기화
+var manager = ReferenceManager.CreateWithDefaultHandlers();
+manager.LoadAll("data/references");
+
+// 유닛 조회
+var golemRef = manager.Units?.Get("golem");
+if (golemRef != null)
+{
+    var unit = golemRef.CreateUnit("golem", id, faction, position);
+}
+```
+
+**SimulatorCore 통합**:
+
+```csharp
+// 폴백 체인: ReferenceManager → UnitRegistry → 기본값
+var unitRef = _referenceManager?.Units?.Get(request.UnitId);
+if (unitRef != null)
+{
+    // Reference에서 유닛 생성
+}
+else
+{
+    // UnitRegistry 폴백 (레거시 호환)
+}
+```
+
+**지원 어빌리티 타입**:
+
+| Type | 설명 | 주요 필드 |
+|------|------|-----------|
+| `DeathSpawn` | 사망 시 유닛 스폰 | spawnUnitId, spawnCount, spawnRadius |
+| `DeathDamage` | 사망 시 범위 피해 | damage, radius |
+| `Shield` | 보호막 | maxShieldHP, blocksStun |
+| `ChargeAttack` | 돌진 공격 | triggerDistance, damageMultiplier, speedMultiplier |
+| `SplashDamage` | 범위 공격 | radius, damageFalloff |
+
+**완료 조건**:
+- [x] ReferenceManager, ReferenceTable<T> 클래스 구현
+- [x] UnitReference JSON 직렬화/역직렬화
+- [x] AbilityReferenceData 다형성 변환 (ToAbilityData)
+- [x] SimulatorCore 통합 및 폴백 체인
+- [x] data/references/units.json 샘플 데이터 (13개 유닛)
+- [x] 테스트 케이스 (6개)
+
+---
+
 ## 5. Phase 2: 데이터 파이프라인 정규화
 
 **목표**: Google Sheets → 게임 데이터 자동화 파이프라인 구축
@@ -1303,3 +1427,4 @@ jobs:
 | 날짜 | 버전 | 변경 내용 |
 |------|------|-----------|
 | 2024-12-21 | 1.0 | 초안 작성 |
+| 2025-12-26 | 1.1 | M1.6 Reference 시스템 문서 추가 |

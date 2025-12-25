@@ -727,6 +727,48 @@ public class Unit
 
 ---
 
+### 10.6 Unit & Object Preview Images
+
+Sim Studio 2D 프리뷰에서 사용할 아이콘 목록입니다. 모든 아이콘은
+`sim-studio/public/assets/previews` 아래에 있으며, Game Icons(CC BY 3.0)
+컬렉션을 Iconify API로 내려받았습니다.
+
+#### Unit 아이콘
+
+| unitId | displayName | preview asset |
+| --- | --- | --- |
+| skeleton | Skeleton | `sim-studio/public/assets/previews/units/skeleton.svg` |
+| golemite | Golemite | `sim-studio/public/assets/previews/units/golemite.svg` |
+| lava_pup | Lava Pup | `sim-studio/public/assets/previews/units/lava_pup.svg` |
+| minion | Minion | `sim-studio/public/assets/previews/units/minion.svg` |
+| bat | Bat | `sim-studio/public/assets/previews/units/bat.svg` |
+| elixir_golemite | Elixir Golemite | `sim-studio/public/assets/previews/units/elixir_golemite.svg` |
+| elixir_blob | Elixir Blob | `sim-studio/public/assets/previews/units/elixir_blob.svg` |
+| guard | Guard | `sim-studio/public/assets/previews/units/guard.svg` |
+| knight | Knight | `sim-studio/public/assets/previews/units/knight.svg` |
+| prince | Prince | `sim-studio/public/assets/previews/units/prince.svg` |
+| baby_dragon | Baby Dragon | `sim-studio/public/assets/previews/units/baby_dragon.svg` |
+| golem | Golem | `sim-studio/public/assets/previews/units/golem.svg` |
+| lava_hound | Lava Hound | `sim-studio/public/assets/previews/units/lava_hound.svg` |
+
+#### Object 아이콘 (카테고리)
+
+| type | preview asset |
+| --- | --- |
+| BuildingType.Defensive | `sim-studio/public/assets/previews/objects/building_defensive.svg` |
+| BuildingType.Spawner | `sim-studio/public/assets/previews/objects/building_spawner.svg` |
+| BuildingType.Utility | `sim-studio/public/assets/previews/objects/building_utility.svg` |
+| SpellType.Instant | `sim-studio/public/assets/previews/objects/spell_instant.svg` |
+| SpellType.AreaOverTime | `sim-studio/public/assets/previews/objects/spell_area_over_time.svg` |
+| SpellType.Utility | `sim-studio/public/assets/previews/objects/spell_utility.svg` |
+| SpellType.Spawning | `sim-studio/public/assets/previews/objects/spell_spawning.svg` |
+| Projectile (Generic) | `sim-studio/public/assets/previews/objects/projectile_generic.svg` |
+
+#### 아이콘 출처
+
+- Game Icons (CC BY 3.0): https://game-icons.net
+- Iconify API: https://api.iconify.design
+
 ## 11. Simulation Loop Architecture
 
 ### 11.1 설계 원칙
@@ -985,8 +1027,545 @@ public FrameData Step(ISimulatorCallbacks? callbacks = null)
 
 ---
 
-## 12. References
+## 12. Tower System & Win Conditions
+
+### 12.1 개요
+
+클래시로얄 스타일의 타워 기반 승패 시스템입니다. 각 진영은 타워를 보유하며, 적 타워를 파괴하거나 방어하여 승패를 결정합니다.
+
+### 12.2 Tower Types
+
+```csharp
+public enum TowerType
+{
+    Princess,   // 사이드 타워 (2개) - 먼저 공격 가능
+    King        // 킹 타워 (1개) - Princess 파괴 후 공격 가능
+}
+
+public class Tower
+{
+    // === 식별 ===
+    public int Id { get; init; }
+    public TowerType Type { get; init; }
+    public UnitFaction Faction { get; init; }
+
+    // === 위치/크기 ===
+    public Vector2 Position { get; init; }
+    public float Radius { get; init; }           // 충돌/타겟팅 반경
+    public float AttackRadius { get; init; }     // 공격 사거리
+
+    // === 스탯 ===
+    public int MaxHP { get; init; }
+    public int CurrentHP { get; set; }
+    public int Damage { get; init; }
+    public float AttackSpeed { get; init; }      // 초당 공격 횟수
+    public TargetType CanTarget { get; init; }   // Ground | Air | GroundAndAir
+
+    // === 상태 ===
+    public bool IsDestroyed => CurrentHP <= 0;
+    public bool IsActivated { get; set; }        // King: Princess 파괴 시 활성화
+    public float AttackCooldown { get; set; }
+    public Unit? CurrentTarget { get; set; }
+}
+```
+
+### 12.3 Tower Stats (Level 11 기준)
+
+| Tower Type | HP | Damage | Attack Speed | Range | CanTarget |
+|------------|-----|--------|--------------|-------|-----------|
+| Princess Tower | 3,052 | 109 | 0.8초 | 350 | GroundAndAir |
+| King Tower | 4,824 | 109 | 1.0초 | 350 | GroundAndAir |
+
+### 12.4 Map Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        ENEMY SIDE                            │
+│                                                              │
+│     [Princess L]          [King]          [Princess R]       │
+│         (E)                (E)                (E)            │
+│                                                              │
+│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ BRIDGE ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│                          RIVER                               │
+│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ BRIDGE ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│                                                              │
+│     [Princess L]          [King]          [Princess R]       │
+│         (F)                (F)                (F)            │
+│                                                              │
+│                       FRIENDLY SIDE                          │
+└─────────────────────────────────────────────────────────────┘
+
+Map Dimensions: 3200 x 5100 (가로 x 세로)
+Tile Size: 100 units
+```
+
+**좌표 (Friendly 기준):**
+
+| Tower | Position (x, y) | Radius |
+|-------|-----------------|--------|
+| Friendly King | (1600, 700) | 150 |
+| Friendly Princess L | (600, 1200) | 100 |
+| Friendly Princess R | (2600, 1200) | 100 |
+| Enemy King | (1600, 4400) | 150 |
+| Enemy Princess L | (600, 3900) | 100 |
+| Enemy Princess R | (2600, 3900) | 100 |
+
+### 12.5 Tower Targeting Rules
+
+```csharp
+public class TowerTargetingRules
+{
+    /// <summary>
+    /// King Tower 공격 가능 조건
+    /// </summary>
+    public static bool CanTargetKingTower(UnitFaction attackerFaction, GameState state)
+    {
+        var enemyFaction = attackerFaction == UnitFaction.Friendly
+            ? UnitFaction.Enemy
+            : UnitFaction.Friendly;
+
+        // 조건 1: 적 Princess Tower 중 하나 이상 파괴됨
+        bool princessDestroyed = state.GetTowers(enemyFaction)
+            .Any(t => t.Type == TowerType.Princess && t.IsDestroyed);
+
+        // 조건 2: King Tower가 유닛에 의해 피해를 받음 (직접 공격)
+        bool kingDamaged = state.GetKingTower(enemyFaction).CurrentHP
+            < state.GetKingTower(enemyFaction).MaxHP;
+
+        return princessDestroyed || kingDamaged;
+    }
+
+    /// <summary>
+    /// 유닛의 타워 타겟 우선순위
+    /// </summary>
+    public static Tower? GetTargetTower(Unit unit, GameState state)
+    {
+        var enemyFaction = unit.Faction == UnitFaction.Friendly
+            ? UnitFaction.Enemy
+            : UnitFaction.Friendly;
+
+        var towers = state.GetTowers(enemyFaction)
+            .Where(t => !t.IsDestroyed)
+            .ToList();
+
+        // 1. King Tower 공격 가능한 경우 가장 가까운 타워
+        if (CanTargetKingTower(unit.Faction, state))
+        {
+            return towers.OrderBy(t => Vector2.Distance(unit.Position, t.Position))
+                         .FirstOrDefault();
+        }
+
+        // 2. Princess Tower만 타겟 가능
+        return towers.Where(t => t.Type == TowerType.Princess)
+                     .OrderBy(t => Vector2.Distance(unit.Position, t.Position))
+                     .FirstOrDefault();
+    }
+}
+```
+
+### 12.6 King Tower Activation
+
+King Tower는 기본적으로 **비활성 상태**이며, 다음 조건에서 활성화됩니다:
+
+```csharp
+public static class KingActivation
+{
+    public static bool ShouldActivateKing(Tower king, GameState state)
+    {
+        if (king.Type != TowerType.King || king.IsActivated)
+            return false;
+
+        var faction = king.Faction;
+
+        // 조건 1: Princess Tower가 파괴됨
+        bool princessDestroyed = state.GetTowers(faction)
+            .Any(t => t.Type == TowerType.Princess && t.IsDestroyed);
+
+        // 조건 2: King Tower가 직접 피해를 받음
+        bool kingDamaged = king.CurrentHP < king.MaxHP;
+
+        return princessDestroyed || kingDamaged;
+    }
+}
+```
+
+**활성화 시:**
+- King Tower가 적 유닛을 공격하기 시작
+- 적 유닛이 King Tower를 직접 타겟팅 가능
+
+### 12.7 Unit Target Priority
+
+유닛이 타겟을 선택할 때의 우선순위:
+
+```csharp
+public enum TargetPriority
+{
+    Nearest,            // 가장 가까운 적 (대부분의 유닛)
+    Buildings,          // 건물 우선 (Hog Rider, Giant, Golem)
+    LowestHP,           // 낮은 HP 우선 (일부 특수 유닛)
+    Air                 // 공중 유선 (일부 특수 유닛)
+}
+
+public class UnitTargetingSystem
+{
+    public static IEntity? GetTarget(Unit unit, GameState state)
+    {
+        var enemies = state.GetEnemyUnits(unit.Faction)
+            .Where(e => !e.IsDead && unit.CanTarget(e))
+            .ToList();
+
+        var towers = state.GetTowers(GetEnemyFaction(unit.Faction))
+            .Where(t => !t.IsDestroyed && CanAttackTower(unit, t, state))
+            .Cast<IEntity>()
+            .ToList();
+
+        switch (unit.TargetPriority)
+        {
+            case TargetPriority.Buildings:
+                // 타워 우선, 없으면 유닛
+                var nearestTower = towers.OrderBy(t => Distance(unit, t)).FirstOrDefault();
+                if (nearestTower != null) return nearestTower;
+                return enemies.OrderBy(e => Distance(unit, e)).FirstOrDefault();
+
+            case TargetPriority.Nearest:
+            default:
+                // 가장 가까운 적 (유닛 또는 타워)
+                var allTargets = enemies.Cast<IEntity>().Concat(towers);
+                return allTargets.OrderBy(t => Distance(unit, t)).FirstOrDefault();
+        }
+    }
+}
+```
+
+### 12.8 Win/Lose Conditions
+
+```csharp
+public enum GameResult
+{
+    InProgress,         // 게임 진행 중
+    FriendlyWin,        // 아군 승리
+    EnemyWin,           // 적군 승리
+    Draw                // 무승부
+}
+
+public enum WinCondition
+{
+    KingDestroyed,      // King Tower 파괴
+    MoreTowerDamage,    // 시간 종료 시 더 많은 타워 파괴
+    MoreCrownCount,     // 시간 종료 시 더 많은 크라운
+    TieBreaker          // 서든데스에서 첫 타워 파괴
+}
+
+public class WinConditionEvaluator
+{
+    private readonly float _regularTime = 180f;     // 3분
+    private readonly float _overtimeLimit = 300f;   // 5분 (총 시간)
+
+    public (GameResult Result, WinCondition? Condition) Evaluate(GameState state)
+    {
+        var friendlyKing = state.GetKingTower(UnitFaction.Friendly);
+        var enemyKing = state.GetKingTower(UnitFaction.Enemy);
+
+        // ─────────────────────────────────────────────
+        // 즉시 승패 조건: King Tower 파괴
+        // ─────────────────────────────────────────────
+        if (enemyKing.IsDestroyed)
+            return (GameResult.FriendlyWin, WinCondition.KingDestroyed);
+        if (friendlyKing.IsDestroyed)
+            return (GameResult.EnemyWin, WinCondition.KingDestroyed);
+
+        // ─────────────────────────────────────────────
+        // 정규 시간 종료 (3분)
+        // ─────────────────────────────────────────────
+        if (state.ElapsedTime >= _regularTime && state.ElapsedTime < _overtimeLimit)
+        {
+            int friendlyCrowns = CountCrowns(state, UnitFaction.Friendly);
+            int enemyCrowns = CountCrowns(state, UnitFaction.Enemy);
+
+            // 크라운 차이가 있으면 승패 결정
+            if (friendlyCrowns > enemyCrowns)
+                return (GameResult.FriendlyWin, WinCondition.MoreCrownCount);
+            if (enemyCrowns > friendlyCrowns)
+                return (GameResult.EnemyWin, WinCondition.MoreCrownCount);
+
+            // 동점이면 연장전 진입 (InProgress 유지)
+        }
+
+        // ─────────────────────────────────────────────
+        // 연장전 종료 (5분) - 타워 HP 비교
+        // ─────────────────────────────────────────────
+        if (state.ElapsedTime >= _overtimeLimit)
+        {
+            float friendlyHPRatio = GetTotalTowerHPRatio(state, UnitFaction.Friendly);
+            float enemyHPRatio = GetTotalTowerHPRatio(state, UnitFaction.Enemy);
+
+            if (friendlyHPRatio > enemyHPRatio)
+                return (GameResult.FriendlyWin, WinCondition.MoreTowerDamage);
+            if (enemyHPRatio > friendlyHPRatio)
+                return (GameResult.EnemyWin, WinCondition.MoreTowerDamage);
+
+            return (GameResult.Draw, null);
+        }
+
+        return (GameResult.InProgress, null);
+    }
+
+    private int CountCrowns(GameState state, UnitFaction faction)
+    {
+        var enemyFaction = faction == UnitFaction.Friendly
+            ? UnitFaction.Enemy
+            : UnitFaction.Friendly;
+
+        int crowns = 0;
+        foreach (var tower in state.GetTowers(enemyFaction))
+        {
+            if (tower.IsDestroyed)
+            {
+                crowns += tower.Type == TowerType.King ? 3 : 1;
+            }
+        }
+        return crowns;
+    }
+
+    private float GetTotalTowerHPRatio(GameState state, UnitFaction faction)
+    {
+        var towers = state.GetTowers(faction);
+        float currentHP = towers.Sum(t => t.CurrentHP);
+        float maxHP = towers.Sum(t => t.MaxHP);
+        return currentHP / maxHP;
+    }
+}
+```
+
+### 12.9 Crown System
+
+| 파괴된 타워 | 획득 크라운 |
+|------------|------------|
+| Princess Tower | 1 |
+| King Tower | 3 |
+| **최대 크라운** | **3** |
+
+> King Tower 파괴 시 즉시 게임 종료이므로 크라운은 항상 최대 3개.
+
+### 12.10 Overtime Rules (연장전)
+
+```csharp
+public class OvertimeRules
+{
+    // 연장전 조건
+    public bool IsOvertime(GameState state)
+    {
+        if (state.ElapsedTime < 180f) return false;  // 3분 미만
+
+        int friendlyCrowns = CountCrowns(state, UnitFaction.Friendly);
+        int enemyCrowns = CountCrowns(state, UnitFaction.Enemy);
+
+        return friendlyCrowns == enemyCrowns;  // 동점일 때만 연장전
+    }
+
+    // 연장전 특수 규칙
+    public void ApplyOvertimeModifiers(GameState state)
+    {
+        if (!IsOvertime(state)) return;
+
+        // 연장전: 엘릭서 생성 속도 2배 (선택적)
+        state.ElixirRegenRate *= 2f;
+
+        // 연장전 시간 제한
+        state.MaxGameTime = 300f;  // 5분
+    }
+}
+```
+
+### 12.11 Tower 공격 로직
+
+```csharp
+public class TowerCombatSystem
+{
+    public void UpdateTower(Tower tower, GameState state, FrameEvents events)
+    {
+        if (tower.IsDestroyed) return;
+
+        // King Tower 비활성 상태면 공격 안 함
+        if (tower.Type == TowerType.King && !tower.IsActivated) return;
+
+        // 쿨다운 감소
+        tower.AttackCooldown -= state.DeltaTime;
+
+        // 타겟 검증 및 재선정
+        if (tower.CurrentTarget == null ||
+            tower.CurrentTarget.IsDead ||
+            !IsInRange(tower, tower.CurrentTarget))
+        {
+            tower.CurrentTarget = FindNearestTarget(tower, state);
+        }
+
+        // 공격
+        if (tower.CurrentTarget != null && tower.AttackCooldown <= 0)
+        {
+            events.Damages.Add(new DamageEvent
+            {
+                Source = tower,
+                Target = tower.CurrentTarget,
+                Amount = tower.Damage,
+                Type = DamageType.Tower
+            });
+
+            tower.AttackCooldown = 1f / tower.AttackSpeed;
+        }
+    }
+
+    private Unit? FindNearestTarget(Tower tower, GameState state)
+    {
+        var enemyFaction = tower.Faction == UnitFaction.Friendly
+            ? UnitFaction.Enemy
+            : UnitFaction.Friendly;
+
+        return state.GetUnits(enemyFaction)
+            .Where(u => !u.IsDead &&
+                        tower.CanTarget.HasFlag(GetTargetFlag(u)) &&
+                        IsInRange(tower, u))
+            .OrderBy(u => Vector2.Distance(tower.Position, u.Position))
+            .FirstOrDefault();
+    }
+}
+```
+
+### 12.12 FrameData 확장
+
+```csharp
+public class FrameData
+{
+    // === 기존 필드 ===
+    public int FrameNumber { get; init; }
+    public List<UnitStateData> Friendlies { get; init; }
+    public List<UnitStateData> Enemies { get; init; }
+
+    // === 타워 상태 추가 ===
+    public List<TowerStateData> FriendlyTowers { get; init; }
+    public List<TowerStateData> EnemyTowers { get; init; }
+
+    // === 게임 상태 ===
+    public float ElapsedTime { get; init; }
+    public int FriendlyCrowns { get; init; }
+    public int EnemyCrowns { get; init; }
+    public GameResult GameResult { get; init; }
+    public bool IsOvertime { get; init; }
+}
+
+public class TowerStateData
+{
+    public int Id { get; init; }
+    public TowerType Type { get; init; }
+    public SerializableVector2 Position { get; init; }
+    public int CurrentHP { get; init; }
+    public int MaxHP { get; init; }
+    public bool IsDestroyed { get; init; }
+    public bool IsActivated { get; init; }
+    public int? TargetId { get; init; }
+}
+```
+
+### 12.13 Implementation Checklist
+
+**Phase A: Tower Foundation**
+- [ ] `Tower` 클래스 구현
+- [ ] `TowerType` enum 추가
+- [ ] `TowerStateData` 직렬화 구조 정의
+- [ ] `GameState`에 타워 리스트 추가
+
+**Phase B: Combat Integration**
+- [ ] 타워 공격 로직 (`TowerCombatSystem`)
+- [ ] 유닛의 타워 타겟팅 (`UnitTargetingSystem`)
+- [ ] King Tower 활성화 로직
+
+**Phase C: Win Conditions**
+- [ ] `GameResult`, `WinCondition` enum
+- [ ] `WinConditionEvaluator` 구현
+- [ ] 크라운 카운팅 로직
+- [ ] 연장전 규칙
+
+**Phase D: Integration**
+- [ ] `SimulatorCore.Step()`에 타워 업데이트 추가
+- [ ] `FrameData` 확장
+- [ ] 테스트 케이스 작성
+
+---
+
+## 13. River & Bridge System
+
+### 13.1 River (강)
+
+맵 중앙을 가로지르는 강은 **Ground 유닛의 이동을 차단**합니다.
+
+```csharp
+public class River
+{
+    public float YMin { get; init; }  // 강 시작 Y
+    public float YMax { get; init; }  // 강 끝 Y
+    public float Width => YMax - YMin;
+}
+```
+
+**좌표:**
+- `YMin`: 2400
+- `YMax`: 2700
+- 강 너비: 300 units (3 타일)
+
+### 13.2 Bridge (다리)
+
+다리는 Ground 유닛이 강을 건널 수 있는 유일한 경로입니다.
+
+```csharp
+public class Bridge
+{
+    public float XMin { get; init; }
+    public float XMax { get; init; }
+    public float YMin { get; init; }
+    public float YMax { get; init; }
+}
+```
+
+**좌표:**
+- Left Bridge: X(400, 800), Y(2400, 2700)
+- Right Bridge: X(2400, 2800), Y(2400, 2700)
+
+### 13.3 Movement Rules
+
+```csharp
+public class TerrainSystem
+{
+    public bool CanMoveTo(Unit unit, Vector2 targetPosition, GameState state)
+    {
+        // Air 유닛은 지형 무시
+        if (unit.Layer == MovementLayer.Air)
+            return true;
+
+        // Ground 유닛: 강 체크
+        if (IsInRiver(targetPosition) && !IsOnBridge(targetPosition))
+            return false;
+
+        return true;
+    }
+
+    private bool IsInRiver(Vector2 pos)
+        => pos.Y >= 2400 && pos.Y <= 2700;
+
+    private bool IsOnBridge(Vector2 pos)
+    {
+        if (!IsInRiver(pos)) return false;
+        bool leftBridge = pos.X >= 400 && pos.X <= 800;
+        bool rightBridge = pos.X >= 2400 && pos.X <= 2800;
+        return leftBridge || rightBridge;
+    }
+}
+```
+
+---
+
+## 14. References
 
 - [Clash Royale Wiki - Cards](https://clashroyale.fandom.com/wiki/Cards)
 - [Clash Royale Wiki - Troop Cards](https://clashroyale.fandom.com/wiki/Category:Troop_Cards)
+- [Clash Royale Wiki - Arenas](https://clashroyale.fandom.com/wiki/Arenas)
 - [Clash Royale - Unit Statistics](https://unitstatistics.com/clash-royale/)
