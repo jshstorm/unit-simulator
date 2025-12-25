@@ -41,6 +41,7 @@ public class SimulatorCore
     private readonly EnemyBehavior _enemyBehavior = new();
     private readonly CombatSystem _combatSystem = new();
     private readonly UnitRegistry _unitRegistry = UnitRegistry.CreateWithDefaults();
+    private ReferenceManager? _referenceManager;
     private bool _isInitialized = false;
     private bool _isRunning = false;
 
@@ -80,7 +81,13 @@ public class SimulatorCore
     /// <summary>
     /// 유닛 정의 레지스트리. 외부에서 정의 등록 가능.
     /// </summary>
+    [Obsolete("Use ReferenceManager instead")]
     public UnitRegistry UnitRegistry => _unitRegistry;
+
+    /// <summary>
+    /// 레퍼런스 매니저. JSON 파일에서 로드된 읽기 전용 데이터.
+    /// </summary>
+    public ReferenceManager? References => _referenceManager;
 
     /// <summary>
     /// Gets or sets the current wave number.
@@ -214,6 +221,18 @@ public class SimulatorCore
     /// </summary>
     public void Initialize()
     {
+        Initialize(null);
+    }
+
+    /// <summary>
+    /// 시뮬레이터를 초기화합니다.
+    /// </summary>
+    /// <param name="referencePath">레퍼런스 데이터 디렉토리 경로 (null이면 기본 경로 사용)</param>
+    public void Initialize(string? referencePath)
+    {
+        // Load reference data
+        LoadReferences(referencePath);
+
         // Set main target on the right side of the simulation area
         _mainTarget = new Vector2(GameConstants.SIMULATION_WIDTH - 100, GameConstants.SIMULATION_HEIGHT / 2);
 
@@ -233,6 +252,18 @@ public class SimulatorCore
         _hasMoreWaves = true;
 
         Console.WriteLine("SimulatorCore initialized successfully.");
+    }
+
+    /// <summary>
+    /// 레퍼런스 데이터를 로드합니다.
+    /// </summary>
+    /// <param name="referencePath">레퍼런스 디렉토리 경로 (null이면 기본 경로)</param>
+    public void LoadReferences(string? referencePath = null)
+    {
+        referencePath ??= "data/references";
+
+        _referenceManager = ReferenceManager.CreateWithDefaultHandlers();
+        _referenceManager.LoadAll(referencePath, Console.WriteLine);
     }
 
     private List<Unit> CreateFriendlySquad()
@@ -632,46 +663,67 @@ public class SimulatorCore
 
         int id = request.Faction == UnitFaction.Friendly ? GetNextFriendlyId() : GetNextEnemyId();
         Unit unit;
+        string? displayName = null;
 
-        // 레지스트리에서 유닛 정의 조회
-        var definition = _unitRegistry.GetDefinition(request.UnitId);
-        if (definition != null)
+        // 1. ReferenceManager에서 조회 (우선)
+        var unitRef = _referenceManager?.Units?.Get(request.UnitId);
+        if (unitRef != null)
         {
-            // 정의가 있으면 해당 스탯으로 유닛 생성
-            unit = definition.CreateUnit(id, request.Faction, request.Position);
+            unit = unitRef.CreateUnit(request.UnitId, id, request.Faction, request.Position);
+            displayName = unitRef.DisplayName;
 
-            // HP 오버라이드가 있으면 적용
             if (request.HP > 0)
             {
                 unit.HP = request.HP;
             }
+        }
+        // 2. UnitRegistry에서 조회 (폴백)
+        else
+        {
+            var definition = _unitRegistry.GetDefinition(request.UnitId);
+            if (definition != null)
+            {
+                unit = definition.CreateUnit(id, request.Faction, request.Position);
+                displayName = definition.DisplayName;
 
-            callbacks.OnStateChanged($"Unit {unit.Label} ({definition.DisplayName}) spawned at ({request.Position.X:F0}, {request.Position.Y:F0})");
+                if (request.HP > 0)
+                {
+                    unit.HP = request.HP;
+                }
+            }
+            // 3. 기본값으로 생성 (레거시 호환)
+            else
+            {
+                int health = request.HP > 0
+                    ? request.HP
+                    : (request.Faction == UnitFaction.Friendly ? GameConstants.FRIENDLY_HP : GameConstants.ENEMY_HP);
+                float unitSpeed = request.Faction == UnitFaction.Friendly ? 4.5f : 4.0f;
+                float unitTurnSpeed = request.Faction == UnitFaction.Friendly ? 0.08f : 0.1f;
+
+                unit = new Unit(
+                    request.Position,
+                    GameConstants.UNIT_RADIUS,
+                    unitSpeed,
+                    unitTurnSpeed,
+                    UnitRole.Melee,
+                    health,
+                    id,
+                    request.Faction
+                );
+
+                if (!string.IsNullOrEmpty(request.UnitId))
+                {
+                    callbacks.OnStateChanged($"Warning: Unknown unit type '{request.UnitId}', using defaults");
+                }
+            }
+        }
+
+        if (displayName != null)
+        {
+            callbacks.OnStateChanged($"Unit {unit.Label} ({displayName}) spawned at ({request.Position.X:F0}, {request.Position.Y:F0})");
         }
         else
         {
-            // 정의가 없으면 기본값으로 생성 (레거시 호환)
-            int health = request.HP > 0
-                ? request.HP
-                : (request.Faction == UnitFaction.Friendly ? GameConstants.FRIENDLY_HP : GameConstants.ENEMY_HP);
-            float unitSpeed = request.Faction == UnitFaction.Friendly ? 4.5f : 4.0f;
-            float unitTurnSpeed = request.Faction == UnitFaction.Friendly ? 0.08f : 0.1f;
-
-            unit = new Unit(
-                request.Position,
-                GameConstants.UNIT_RADIUS,
-                unitSpeed,
-                unitTurnSpeed,
-                UnitRole.Melee,
-                health,
-                id,
-                request.Faction
-            );
-
-            if (!string.IsNullOrEmpty(request.UnitId))
-            {
-                callbacks.OnStateChanged($"Warning: Unknown unit type '{request.UnitId}', using defaults");
-            }
             callbacks.OnStateChanged($"Unit {unit.Label} spawned at ({request.Position.X:F0}, {request.Position.Y:F0})");
         }
 

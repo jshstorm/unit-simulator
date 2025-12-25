@@ -1,0 +1,186 @@
+{
+  "skeleton": {
+    "displayName": "Skeleton",
+    "maxHP": 81,
+    "damage": 81,
+    "moveSpeed": 5.0,
+    "turnSpeed": 0.12,
+    "attackRange": 25,
+    "radius": 15,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": []
+  },
+  "golemite": {
+    "displayName": "Golemite",
+    "maxHP": 900,
+    "damage": 50,
+    "moveSpeed": 3.0,
+    "turnSpeed": 0.1,
+    "attackRange": 30,
+    "radius": 25,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "DeathDamage", "damage": 100, "radius": 40 }
+    ]
+  },
+  "lava_pup": {
+    "displayName": "Lava Pup",
+    "maxHP": 209,
+    "damage": 55,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 60,
+    "radius": 15,
+    "role": "Ranged",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "abilities": []
+  },
+  "minion": {
+    "displayName": "Minion",
+    "maxHP": 252,
+    "damage": 84,
+    "moveSpeed": 5.0,
+    "turnSpeed": 0.1,
+    "attackRange": 60,
+    "radius": 18,
+    "role": "Ranged",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "abilities": []
+  },
+  "bat": {
+    "displayName": "Bat",
+    "maxHP": 81,
+    "damage": 81,
+    "moveSpeed": 5.5,
+    "turnSpeed": 0.15,
+    "attackRange": 25,
+    "radius": 12,
+    "role": "Melee",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "abilities": []
+  },
+  "elixir_golemite": {
+    "displayName": "Elixir Golemite",
+    "maxHP": 560,
+    "damage": 42,
+    "moveSpeed": 3.5,
+    "turnSpeed": 0.1,
+    "attackRange": 30,
+    "radius": 22,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "DeathSpawn", "spawnUnitId": "elixir_blob", "spawnCount": 2, "spawnRadius": 20 }
+    ]
+  },
+  "elixir_blob": {
+    "displayName": "Elixir Blob",
+    "maxHP": 280,
+    "damage": 21,
+    "moveSpeed": 3.5,
+    "turnSpeed": 0.1,
+    "attackRange": 25,
+    "radius": 18,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": []
+  },
+  "guard": {
+    "displayName": "Guard",
+    "maxHP": 90,
+    "damage": 90,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 30,
+    "radius": 18,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "Shield", "maxShieldHP": 199 }
+    ]
+  },
+  "knight": {
+    "displayName": "Knight",
+    "maxHP": 1938,
+    "damage": 202,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 60,
+    "radius": 20,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": []
+  },
+  "prince": {
+    "displayName": "Prince",
+    "maxHP": 1669,
+    "damage": 392,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 80,
+    "radius": 25,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "ChargeAttack", "triggerDistance": 150, "requiredChargeDistance": 100, "damageMultiplier": 2.0, "speedMultiplier": 2.0 }
+    ]
+  },
+  "baby_dragon": {
+    "displayName": "Baby Dragon",
+    "maxHP": 1152,
+    "damage": 160,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 180,
+    "radius": 25,
+    "role": "Ranged",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "abilities": [
+      { "type": "SplashDamage", "radius": 60, "damageFalloff": 0 }
+    ]
+  },
+  "golem": {
+    "displayName": "Golem",
+    "maxHP": 5984,
+    "damage": 270,
+    "moveSpeed": 2.0,
+    "turnSpeed": 0.08,
+    "attackRange": 60,
+    "radius": 40,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "DeathSpawn", "spawnUnitId": "golemite", "spawnCount": 2, "spawnRadius": 30 },
+      { "type": "DeathDamage", "damage": 270, "radius": 60 }
+    ]
+  },
+  "lava_hound": {
+    "displayName": "Lava Hound",
+    "maxHP": 3500,
+    "damage": 55,
+    "moveSpeed": 2.0,
+    "turnSpeed": 0.08,
+    "attackRange": 60,
+    "radius": 35,
+    "role": "Melee",
+    "layer": "Air",
+    "canTarget": "Ground",
+    "abilities": [
+      { "type": "DeathSpawn", "spawnUnitId": "lava_pup", "spawnCount": 6, "spawnRadius": 40 }
+    ]
+  }
+}
