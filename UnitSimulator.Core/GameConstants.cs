@@ -7,8 +7,8 @@ namespace UnitSimulator;
 public static class GameConstants
 {
     // Simulation space (used for unit spawning and boundary checks)
-    public const int SIMULATION_WIDTH = 2000;
-    public const int SIMULATION_HEIGHT = 1000;
+    public const int SIMULATION_WIDTH = 3200;
+    public const int SIMULATION_HEIGHT = 5100;
     public const int MAX_FRAMES = 3000;
 
     // Unit settings

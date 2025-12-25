@@ -15,12 +15,12 @@ public static class MapLayout
     /// <summary>
     /// 맵 너비
     /// </summary>
-    public const float MapWidth = 3200f;
+    public const float MapWidth = GameConstants.SIMULATION_WIDTH;
 
     /// <summary>
     /// 맵 높이
     /// </summary>
-    public const float MapHeight = 5100f;
+    public const float MapHeight = GameConstants.SIMULATION_HEIGHT;
 
     /// <summary>
     /// 타일 크기 (참조용)

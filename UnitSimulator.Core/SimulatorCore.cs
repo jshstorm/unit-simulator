@@ -439,7 +439,8 @@ public class SimulatorCore
                 state.Layer,
                 state.CanTarget,
                 state.Damage,
-                abilities
+                abilities,
+                unitId: string.IsNullOrWhiteSpace(state.UnitId) ? "unknown" : state.UnitId
             );
 
             unit.Velocity = state.Velocity.ToVector2();
