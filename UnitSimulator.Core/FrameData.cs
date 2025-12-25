@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace UnitSimulator;
 
@@ -222,6 +224,56 @@ public class UnitStateData
     public float AttackCooldown { get; set; }
 
     /// <summary>
+    /// The unit's movement layer (Ground/Air).
+    /// </summary>
+    public MovementLayer Layer { get; set; }
+
+    /// <summary>
+    /// Target types this unit can attack.
+    /// </summary>
+    public TargetType CanTarget { get; set; }
+
+    /// <summary>
+    /// Base attack damage.
+    /// </summary>
+    public int Damage { get; set; }
+
+    /// <summary>
+    /// Current shield HP.
+    /// </summary>
+    public int ShieldHP { get; set; }
+
+    /// <summary>
+    /// Maximum shield HP.
+    /// </summary>
+    public int MaxShieldHP { get; set; }
+
+    /// <summary>
+    /// Whether the unit has charge state.
+    /// </summary>
+    public bool HasChargeState { get; set; }
+
+    /// <summary>
+    /// Whether the unit is currently charging.
+    /// </summary>
+    public bool IsCharging { get; set; }
+
+    /// <summary>
+    /// Whether the unit has completed charge distance.
+    /// </summary>
+    public bool IsCharged { get; set; }
+
+    /// <summary>
+    /// Required charge distance.
+    /// </summary>
+    public float RequiredChargeDistance { get; set; }
+
+    /// <summary>
+    /// List of abilities this unit has.
+    /// </summary>
+    public List<AbilityType> Abilities { get; set; } = new();
+
+    /// <summary>
     /// The unit's current position.
     /// </summary>
     public SerializableVector2 Position { get; set; } = new();
@@ -295,6 +347,16 @@ public class UnitStateData
             TurnSpeed = unit.TurnSpeed,
             AttackRange = unit.AttackRange,
             AttackCooldown = unit.AttackCooldown,
+            Layer = unit.Layer,
+            CanTarget = unit.CanTarget,
+            Damage = unit.Damage,
+            ShieldHP = unit.ShieldHP,
+            MaxShieldHP = unit.MaxShieldHP,
+            HasChargeState = unit.ChargeState != null,
+            IsCharging = unit.ChargeState?.IsCharging == true,
+            IsCharged = unit.ChargeState?.IsCharged == true,
+            RequiredChargeDistance = unit.ChargeState?.RequiredDistance ?? 0f,
+            Abilities = unit.Abilities.Select(a => a.Type).ToList(),
             Position = new SerializableVector2(unit.Position),
             Velocity = new SerializableVector2(unit.Velocity),
             Forward = new SerializableVector2(unit.Forward),

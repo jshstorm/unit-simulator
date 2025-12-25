@@ -194,7 +194,8 @@ public class SquadBehavior
             {
                 // Phase 2: CombatSystem을 통한 공격 처리 (SplashDamage, ChargeAttack 적용)
                 int damage = friendly.Damage > 0 ? friendly.GetEffectiveDamage() : GameConstants.FRIENDLY_ATTACK_DAMAGE;
-                _combatSystem.PerformAttack(friendly, friendly.Target, livingEnemies);
+                var result = _combatSystem.PerformAttack(friendly, friendly.Target, livingEnemies);
+                sim.ProcessAttackResult(friendly.Faction, result);
                 friendly.AttackCooldown = GameConstants.ATTACK_COOLDOWN;
                 friendly.RecentAttacks.Add(new Tuple<Unit, int>(friendly.Target, 5));
             }

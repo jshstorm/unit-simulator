@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Linq;
 using UnitSimulator.Core.Pathfinding;
 
 namespace UnitSimulator;
@@ -40,6 +41,7 @@ public class SimulatorCore
     private readonly EnemyBehavior _enemyBehavior = new();
     private bool _isInitialized = false;
     private bool _isRunning = false;
+    private readonly List<UnitSpawnRequest> _pendingSpawns = new();
 
     // Pathfinding System
     private PathfindingGrid? _pathfindingGrid;
@@ -318,6 +320,9 @@ public class SimulatorCore
         // Update friendly behavior
         _squadBehavior.UpdateFriendlySquad(this, _friendlySquad, _enemySquad, _mainTarget);
 
+        // Apply delayed spawns after combat resolution
+        ApplyPendingSpawns(callbacks);
+
         // Generate frame data
         var frameData = FrameData.FromSimulationState(
             _currentFrame,
@@ -377,6 +382,7 @@ public class SimulatorCore
         {
             var role = Enum.Parse<UnitRole>(state.Role);
             var faction = Enum.Parse<UnitFaction>(state.Faction);
+            var abilities = RehydrateAbilities(state.Abilities ?? new List<AbilityType>());
 
             var unit = new Unit(
                 state.Position.ToVector2(),
@@ -386,7 +392,11 @@ public class SimulatorCore
                 role,
                 state.HP,
                 state.Id,
-                faction
+                faction,
+                state.Layer,
+                state.CanTarget,
+                state.Damage,
+                abilities
             );
 
             unit.Velocity = state.Velocity.ToVector2();
@@ -394,6 +404,14 @@ public class SimulatorCore
             unit.CurrentDestination = state.CurrentDestination.ToVector2();
             unit.AttackCooldown = state.AttackCooldown;
             unit.IsDead = state.IsDead;
+            unit.ShieldHP = Math.Min(state.ShieldHP, state.MaxShieldHP);
+            unit.ChargeState ??= state.HasChargeState ? new ChargeState() : null;
+            if (unit.ChargeState != null)
+            {
+                unit.ChargeState.IsCharging = state.IsCharging;
+                unit.ChargeState.IsCharged = state.IsCharged;
+                unit.ChargeState.RequiredDistance = state.RequiredChargeDistance;
+            }
             unit.TakenSlotIndex = state.TakenSlotIndex;
             unit.HasAvoidanceTarget = state.HasAvoidanceTarget;
             if (state.AvoidanceTarget != null)
@@ -405,6 +423,30 @@ public class SimulatorCore
         }
 
         return units;
+    }
+
+    private List<AbilityData> RehydrateAbilities(List<AbilityType> abilityTypes)
+    {
+        var abilities = new List<AbilityData>();
+        foreach (var type in abilityTypes)
+        {
+            AbilityData? ability = type switch
+            {
+                AbilityType.ChargeAttack => new ChargeAttackData(),
+                AbilityType.SplashDamage => new SplashDamageData(),
+                AbilityType.Shield => new ShieldData(),
+                AbilityType.DeathSpawn => new DeathSpawnData(),
+                AbilityType.DeathDamage => new DeathDamageData(),
+                _ => null
+            };
+
+            if (ability != null)
+            {
+                abilities.Add(ability);
+            }
+        }
+
+        return abilities;
     }
 
     private void ReestablishTargetReferences()
@@ -433,6 +475,30 @@ public class SimulatorCore
         callbacks.OnStateChanged($"Unit {unit.Label} modified at frame {_currentFrame}");
 
         return true;
+    }
+
+    /// <summary>
+    /// Processes combat results such as spawn requests after an attack.
+    /// </summary>
+    public void ProcessAttackResult(UnitFaction attackerFaction, AttackResult result)
+    {
+        if (result == null) return;
+        if (result.SpawnRequests.Any())
+        {
+            _pendingSpawns.AddRange(result.SpawnRequests);
+        }
+    }
+
+    private void ApplyPendingSpawns(ISimulatorCallbacks callbacks)
+    {
+        if (!_pendingSpawns.Any()) return;
+
+        foreach (var spawn in _pendingSpawns)
+        {
+            InjectSpawnedUnit(spawn, callbacks);
+        }
+
+        _pendingSpawns.Clear();
     }
 
     public Unit InjectUnit(
@@ -464,6 +530,45 @@ public class SimulatorCore
             Faction = faction,
             FrameNumber = _currentFrame,
             Position = position
+        });
+
+        return unit;
+    }
+
+    private Unit InjectSpawnedUnit(UnitSpawnRequest request, ISimulatorCallbacks callbacks)
+    {
+        callbacks ??= new DefaultSimulatorCallbacks();
+
+        int id = request.Faction == UnitFaction.Friendly ? GetNextFriendlyId() : GetNextEnemyId();
+        int health = request.HP > 0
+            ? request.HP
+            : (request.Faction == UnitFaction.Friendly ? GameConstants.FRIENDLY_HP : GameConstants.ENEMY_HP);
+        float unitSpeed = request.Faction == UnitFaction.Friendly ? 4.5f : 4.0f;
+        float unitTurnSpeed = request.Faction == UnitFaction.Friendly ? 0.08f : 0.1f;
+
+        // 기본값: 지상, Ground 타겟 전용 근접 유닛
+        var unit = new Unit(
+            request.Position,
+            GameConstants.UNIT_RADIUS,
+            unitSpeed,
+            unitTurnSpeed,
+            UnitRole.Melee,
+            health,
+            id,
+            request.Faction
+        );
+
+        var squad = request.Faction == UnitFaction.Friendly ? _friendlySquad : _enemySquad;
+        squad.Add(unit);
+
+        callbacks.OnStateChanged($"Unit {unit.Label} spawned from death effect at ({request.Position.X}, {request.Position.Y})");
+        callbacks.OnUnitEvent(new UnitEventData
+        {
+            EventType = UnitEventType.Spawned,
+            UnitId = unit.Id,
+            Faction = request.Faction,
+            FrameNumber = _currentFrame,
+            Position = request.Position
         });
 
         return unit;

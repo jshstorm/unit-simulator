@@ -140,7 +140,7 @@ public class EnemyBehavior
         {
             enemy.Velocity = Vector2.Zero;
             enemy.ClearMovementPath();
-            TryAttack(enemy, target, livingFriendlies);
+            TryAttack(sim, enemy, target, livingFriendlies);
         }
         else
         {
@@ -191,7 +191,7 @@ public class EnemyBehavior
         }
     }
 
-    private void TryAttack(Unit attacker, Unit target, List<Unit> allFriendlies)
+    private void TryAttack(SimulatorCore sim, Unit attacker, Unit target, List<Unit> allFriendlies)
     {
         if (target.IsDead) return;
         float distanceToTarget = Vector2.Distance(attacker.Position, target.Position);
@@ -202,7 +202,8 @@ public class EnemyBehavior
             {
                 // Phase 2: CombatSystem을 통한 공격 처리 (SplashDamage, ChargeAttack 적용)
                 int damage = attacker.Damage > 0 ? attacker.GetEffectiveDamage() : GameConstants.ENEMY_ATTACK_DAMAGE;
-                _combatSystem.PerformAttack(attacker, target, allFriendlies);
+                var result = _combatSystem.PerformAttack(attacker, target, allFriendlies);
+                sim.ProcessAttackResult(attacker.Faction, result);
                 attacker.AttackCooldown = GameConstants.ATTACK_COOLDOWN;
             }
         }

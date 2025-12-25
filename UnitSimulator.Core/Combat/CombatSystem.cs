@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace UnitSimulator;
 
@@ -14,12 +16,12 @@ public class CombatSystem
     /// <param name="attacker">공격자</param>
     /// <param name="target">주 타겟</param>
     /// <param name="allEnemies">스플래시 대상이 될 수 있는 모든 적</param>
-    /// <returns>공격으로 죽은 유닛 목록</returns>
-    public List<Unit> PerformAttack(Unit attacker, Unit target, List<Unit> allEnemies)
+    /// <returns>공격 결과 (사망 유닛, 스폰 요청)</returns>
+    public AttackResult PerformAttack(Unit attacker, Unit target, List<Unit> allEnemies)
     {
-        var killedUnits = new List<Unit>();
+        var result = new AttackResult();
 
-        if (target == null || target.IsDead) return killedUnits;
+        if (target == null || target.IsDead) return result;
 
         int damage = attacker.GetEffectiveDamage();
 
@@ -28,30 +30,27 @@ public class CombatSystem
         target.TakeDamage(damage);
         if (wasAlive && target.IsDead)
         {
-            killedUnits.Add(target);
+            HandleDeath(target, attacker, allEnemies, result);
         }
 
         // SplashDamage 처리
         var splashData = attacker.GetAbility<SplashDamageData>();
         if (splashData != null)
         {
-            var splashKills = ApplySplashDamage(attacker, target, damage, splashData, allEnemies);
-            killedUnits.AddRange(splashKills);
+            ApplySplashDamage(attacker, target, damage, splashData, allEnemies, result);
         }
 
         // 공격 후 처리 (돌진 상태 소비 등)
         attacker.OnAttackPerformed();
 
-        return killedUnits;
+        return result;
     }
 
     /// <summary>
     /// 스플래시 데미지를 적용합니다.
     /// </summary>
-    private List<Unit> ApplySplashDamage(Unit attacker, Unit mainTarget, int baseDamage, SplashDamageData splashData, List<Unit> allEnemies)
+    private void ApplySplashDamage(Unit attacker, Unit mainTarget, int baseDamage, SplashDamageData splashData, List<Unit> allEnemies, AttackResult result)
     {
-        var killedUnits = new List<Unit>();
-
         foreach (var enemy in allEnemies)
         {
             if (enemy == mainTarget || enemy.IsDead) continue;
@@ -74,12 +73,10 @@ public class CombatSystem
                 enemy.TakeDamage(splashDamage);
                 if (wasAlive && enemy.IsDead)
                 {
-                    killedUnits.Add(enemy);
+                    HandleDeath(enemy, attacker, allEnemies, result);
                 }
             }
         }
-
-        return killedUnits;
     }
 
     /// <summary>
@@ -183,6 +180,24 @@ public class CombatSystem
 
         return (spawns, killedUnits);
     }
+
+    private void HandleDeath(Unit dead, Unit attacker, List<Unit> opposingUnits, AttackResult result)
+    {
+        result.KilledUnits.Add(dead);
+
+        // DeathSpawn / DeathDamage 처리
+        var (spawns, killedByDeathDamage) = ProcessDeath(dead, opposingUnits);
+        if (spawns.Any())
+        {
+            result.SpawnRequests.AddRange(spawns);
+        }
+
+        foreach (var killed in killedByDeathDamage)
+        {
+            if (result.KilledUnits.Contains(killed)) continue;
+            result.KilledUnits.Add(killed);
+        }
+    }
 }
 
 /// <summary>
@@ -194,4 +209,13 @@ public class UnitSpawnRequest
     public Vector2 Position { get; init; }
     public UnitFaction Faction { get; init; }
     public int HP { get; init; }
+}
+
+/// <summary>
+/// 공격 결과 데이터
+/// </summary>
+public class AttackResult
+{
+    public List<Unit> KilledUnits { get; } = new();
+    public List<UnitSpawnRequest> SpawnRequests { get; } = new();
 }
