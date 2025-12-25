@@ -22,6 +22,22 @@ const AUTO_FIT_COOLDOWN_MS = 2000;
 const CAMERA_PAN_SPEED = 1600;
 const CAMERA_ZOOM_SPEED = 1.5;
 
+const UNIT_ICON_PATHS: Record<string, string> = {
+  skeleton: '/assets/previews/units/skeleton.svg',
+  golemite: '/assets/previews/units/golemite.svg',
+  lava_pup: '/assets/previews/units/lava_pup.svg',
+  minion: '/assets/previews/units/minion.svg',
+  bat: '/assets/previews/units/bat.svg',
+  elixir_golemite: '/assets/previews/units/elixir_golemite.svg',
+  elixir_blob: '/assets/previews/units/elixir_blob.svg',
+  guard: '/assets/previews/units/guard.svg',
+  knight: '/assets/previews/units/knight.svg',
+  prince: '/assets/previews/units/prince.svg',
+  baby_dragon: '/assets/previews/units/baby_dragon.svg',
+  golem: '/assets/previews/units/golem.svg',
+  lava_hound: '/assets/previews/units/lava_hound.svg',
+};
+
 const getBaseScale = (width: number, height: number) =>
   Math.min(width / WORLD_WIDTH, height / WORLD_HEIGHT);
 
@@ -72,6 +88,8 @@ function SimulationCanvas({
   const targetViewRef = useRef(view);
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
+  const unitIconMapRef = useRef(new Map<string, HTMLImageElement>());
+  const [iconVersion, setIconVersion] = useState(0);
   const isPanningRef = useRef(false);
   const lastPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const prevCanvasSizeRef = useRef(canvasSize);
@@ -138,6 +156,19 @@ function SimulationCanvas({
     const observer = new ResizeObserver(updateSize);
     observer.observe(canvas);
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const map = unitIconMapRef.current;
+    Object.entries(UNIT_ICON_PATHS).forEach(([unitId, src]) => {
+      if (map.has(unitId)) return;
+      const img = new Image();
+      img.onload = () => {
+        setIconVersion((prev) => prev + 1);
+      };
+      img.src = src;
+      map.set(unitId, img);
+    });
   }, []);
 
   useEffect(() => {
@@ -516,18 +547,29 @@ function SimulationCanvas({
         ctx.stroke();
       }
 
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      if (unit.faction === 'Friendly') {
-        ctx.fillStyle = unit.role === 'Melee' ? '#22c55e' : '#3b82f6';
-      } else {
-        ctx.fillStyle = unit.role === 'Melee' ? '#ef4444' : '#f97316';
-      }
-      ctx.fill();
+      const unitKey = unit.unitId ? unit.unitId.toLowerCase() : '';
+      const icon = unitKey ? unitIconMapRef.current.get(unitKey) : undefined;
 
-      ctx.strokeStyle = unit.faction === 'Friendly' ? '#4ade80' : '#f87171';
-      ctx.lineWidth = 2 / (baseScale * zoom);
-      ctx.stroke();
+      if (icon && icon.complete && icon.naturalWidth > 0) {
+        const size = radius * 2;
+        ctx.save();
+        ctx.translate(x - size / 2, y - size / 2);
+        ctx.drawImage(icon, 0, 0, size, size);
+        ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        if (unit.faction === 'Friendly') {
+          ctx.fillStyle = unit.role === 'Melee' ? '#22c55e' : '#3b82f6';
+        } else {
+          ctx.fillStyle = unit.role === 'Melee' ? '#ef4444' : '#f97316';
+        }
+        ctx.fill();
+
+        ctx.strokeStyle = unit.faction === 'Friendly' ? '#4ade80' : '#f87171';
+        ctx.lineWidth = 2 / (baseScale * zoom);
+        ctx.stroke();
+      }
 
       if (!unit.isDead) {
         const fwdLength = radius + 8;
@@ -582,7 +624,7 @@ function SimulationCanvas({
 
     frameData.enemyUnits.forEach(drawUnit);
     frameData.friendlyUnits.forEach(drawUnit);
-  }, [baseScale, canvasSize.height, canvasSize.width, frameData, selectedUnitId, selectedFaction, view]);
+  }, [baseScale, canvasSize.height, canvasSize.width, frameData, iconVersion, selectedUnitId, selectedFaction, view]);
 
   return (
     <canvas

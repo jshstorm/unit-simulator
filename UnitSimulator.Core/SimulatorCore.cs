@@ -639,7 +639,7 @@ public class SimulatorCore
         float unitSpeed = speed ?? (faction == UnitFaction.Friendly ? 4.5f : 4.0f);
         float unitTurnSpeed = turnSpeed ?? (faction == UnitFaction.Friendly ? 0.08f : 0.1f);
 
-        var unit = new Unit(position, GameConstants.UNIT_RADIUS, unitSpeed, unitTurnSpeed, role, health, id, faction);
+        var unit = new Unit(position, GameConstants.UNIT_RADIUS, unitSpeed, unitTurnSpeed, role, health, id, faction, unitId: role.ToString().ToLowerInvariant());
 
         var squad = faction == UnitFaction.Friendly ? _friendlySquad : _enemySquad;
         squad.Add(unit);
@@ -708,7 +708,8 @@ public class SimulatorCore
                     UnitRole.Melee,
                     health,
                     id,
-                    request.Faction
+                    request.Faction,
+                    unitId: string.IsNullOrWhiteSpace(request.UnitId) ? "unknown" : request.UnitId
                 );
 
                 if (!string.IsNullOrEmpty(request.UnitId))

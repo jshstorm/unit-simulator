@@ -48,6 +48,7 @@ public class Unit
     public float AttackCooldown { get; set; }
     public bool IsDead { get; set; }
     public int Id { get; }
+    public string UnitId { get; }
     public UnitFaction Faction { get; }
     public Vector2 CurrentDestination { get; set; } = Vector2.Zero;
     public Unit? AvoidanceThreat { get; set; }
@@ -105,7 +106,7 @@ public class Unit
 
     public Unit(Vector2 position, float radius, float speed, float turnSpeed, UnitRole role, int hp, int id, UnitFaction faction,
         MovementLayer layer = MovementLayer.Ground, TargetType canTarget = TargetType.Ground,
-        int damage = 1, List<AbilityData>? abilities = null)
+        int damage = 1, List<AbilityData>? abilities = null, string unitId = "unknown")
     {
         Position = position;
         CurrentDestination = position;
@@ -118,6 +119,7 @@ public class Unit
         AttackCooldown = 0;
         IsDead = false;
         Velocity = Vector2.Zero;
+        UnitId = unitId;
         Forward = Vector2.UnitX;
         Target = null;
         Id = id;

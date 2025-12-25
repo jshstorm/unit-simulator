@@ -67,7 +67,8 @@ public class UnitDefinition
             layer: Layer,
             canTarget: CanTarget,
             damage: Damage,
-            abilities: Abilities
+            abilities: Abilities,
+            unitId: UnitId
         );
     }
 }

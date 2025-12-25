@@ -8,6 +8,7 @@ export interface SerializableVector2 {
 export interface UnitStateData {
   id: number;
   label: string;
+  unitId?: string;
   role: 'Melee' | 'Ranged';
   faction: 'Friendly' | 'Enemy';
   isDead: boolean;

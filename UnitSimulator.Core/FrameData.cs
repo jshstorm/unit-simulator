@@ -179,6 +179,11 @@ public class UnitStateData
     public string Label { get; set; } = string.Empty;
 
     /// <summary>
+    /// The unit's definition ID (e.g., "golem", "skeleton").
+    /// </summary>
+    public string UnitId { get; set; } = string.Empty;
+
+    /// <summary>
     /// The unit's role (Melee or Ranged).
     /// </summary>
     public string Role { get; set; } = string.Empty;
@@ -338,6 +343,7 @@ public class UnitStateData
         {
             Id = unit.Id,
             Label = unit.Label,
+            UnitId = unit.UnitId,
             Role = unit.Role.ToString(),
             Faction = unit.Faction.ToString(),
             IsDead = unit.IsDead,

@@ -74,7 +74,8 @@ public class UnitReference
             layer: Layer,
             canTarget: CanTarget,
             damage: Damage,
-            abilities: abilities
+            abilities: abilities,
+            unitId: unitId
         );
         return unit;
     }
