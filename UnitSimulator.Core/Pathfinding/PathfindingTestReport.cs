@@ -67,9 +67,9 @@ namespace UnitSimulator.Core.Pathfinding
             int total = resultList.Count;
             int success = resultList.Count(r => r.PathFound);
             int failed = total - success;
-            float avgLength = success == 0 ? 0 : resultList.Where(r => r.PathFound).Average(r => r.PathLength);
-            float avgNodes = success == 0 ? 0 : resultList.Where(r => r.PathFound).Average(r => r.NodeCount);
-            float rate = total == 0 ? 0 : (float)success / total;
+            float avgLength = success == 0 ? 0f : (float)resultList.Where(r => r.PathFound).Average(r => r.PathLength);
+            float avgNodes = success == 0 ? 0f : (float)resultList.Where(r => r.PathFound).Average(r => r.NodeCount);
+            float rate = total == 0 ? 0f : (float)success / total;
 
             return new PathfindingTestSummary
             {
