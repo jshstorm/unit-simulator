@@ -430,6 +430,7 @@ public class WebSocketServer : IDisposable
 
         try
         {
+            Console.WriteLine($"[WebSocketServer] New WebSocket connection from {context.Request.RemoteEndPoint}");
             var wsContext = await context.AcceptWebSocketAsync(null);
             webSocket = wsContext.WebSocket;
 
@@ -437,20 +438,24 @@ public class WebSocketServer : IDisposable
             var clientId = await WaitForIdentifyAsync(webSocket);
             if (clientId == null)
             {
+                Console.WriteLine("[WebSocketServer] Client failed to identify, closing connection");
                 await webSocket.CloseAsync(
                     WebSocketCloseStatus.PolicyViolation,
                     "Identify message required",
                     CancellationToken.None);
                 return;
             }
+            Console.WriteLine($"[WebSocketServer] Client identified: {clientId[..Math.Min(8, clientId.Length)]}");
 
             // Get or create session
             SimulationSession? session;
             if (createNew)
             {
+                Console.WriteLine("[WebSocketServer] Creating new session...");
                 session = _sessionManager.CreateSession();
                 if (session == null)
                 {
+                    Console.WriteLine("[WebSocketServer] Failed to create session: max sessions reached");
                     await SendMessageAsync(webSocket, "error", new { message = "Max sessions reached" });
                     await webSocket.CloseAsync(
                         WebSocketCloseStatus.PolicyViolation,
@@ -461,9 +466,11 @@ public class WebSocketServer : IDisposable
             }
             else
             {
+                Console.WriteLine($"[WebSocketServer] Joining existing session: {requestedSessionId![..Math.Min(8, requestedSessionId.Length)]}");
                 session = _sessionManager.GetSession(requestedSessionId!);
                 if (session == null)
                 {
+                    Console.WriteLine($"[WebSocketServer] Session not found: {requestedSessionId}");
                     await SendMessageAsync(webSocket, "error", new { message = "Session not found", sessionId = requestedSessionId });
                     await webSocket.CloseAsync(
                         WebSocketCloseStatus.PolicyViolation,
@@ -473,10 +480,11 @@ public class WebSocketServer : IDisposable
                 }
             }
 
-            // Add client to session
+            // Add client to session (this triggers simulator initialization if needed)
             var client = session.AddClient(webSocket, clientId);
 
             // Send session info to client
+            Console.WriteLine($"[WebSocketServer] Sending session_joined to client {clientId[..Math.Min(8, clientId.Length)]}");
             await SendMessageAsync(webSocket, "session_joined", new
             {
                 sessionId = session.SessionId,
@@ -490,15 +498,22 @@ public class WebSocketServer : IDisposable
             if (session.Simulator.IsInitialized)
             {
                 var frameData = session.Simulator.GetCurrentFrameData();
+                Console.WriteLine($"[WebSocketServer] Sending initial frame: {frameData.FriendlyTowers.Count}F/{frameData.EnemyTowers.Count}E towers, {frameData.FriendlyUnits.Count}F/{frameData.EnemyUnits.Count}E units");
                 await session.SendToClientAsync(client, "frame", frameData);
+            }
+            else
+            {
+                Console.WriteLine("[WebSocketServer] WARNING: Simulator not initialized after AddClient!");
             }
 
             // Handle client messages
+            Console.WriteLine($"[WebSocketServer] Client {clientId[..Math.Min(8, clientId.Length)]} ready, entering message loop");
             await HandleClientConnectionAsync(client, session);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[WebSocketServer] WebSocket error: {ex.Message}");
+            Console.WriteLine($"[WebSocketServer] Stack trace: {ex.StackTrace}");
         }
         finally
         {

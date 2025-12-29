@@ -395,7 +395,7 @@ function SimulationCanvas({
     }
   }, [getWorldCoordinates, findUnitAtPosition, selectedUnitId, onUnitSelect, onCanvasClick]);
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+  const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     const { x: canvasX, y: canvasY } = getCanvasPixelCoords(e.clientX, e.clientY);
     const { zoom } = viewRef.current;
@@ -411,6 +411,17 @@ function SimulationCanvas({
 
     setTargetView({ zoom: newZoom, panX: newPanX, panY: newPanY });
   }, [baseScale, canvasToWorld, getCanvasPixelCoords, setTargetView]);
+
+  // Attach wheel event listener with { passive: false } to allow preventDefault
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     isPanningRef.current = true;
@@ -630,10 +641,9 @@ function SimulationCanvas({
     <canvas
       ref={canvasRef}
       className="simulation-canvas"
-      width={CANVAS_WIDTH}
-      height={CANVAS_HEIGHT}
+      width={canvasSize.width}
+      height={canvasSize.height}
       onClick={handleCanvasClick}
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUpOrLeave}

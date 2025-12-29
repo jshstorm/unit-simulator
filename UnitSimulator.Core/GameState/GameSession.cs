@@ -81,6 +81,7 @@ public class GameSession
     /// <param name="towerSetups">타워 설정 목록</param>
     public void InitializeTowers(List<TowerSetup> towerSetups)
     {
+        Console.WriteLine($"[GameSession] InitializeTowers() called with {towerSetups.Count} setups");
         FriendlyTowers.Clear();
         EnemyTowers.Clear();
 
@@ -92,6 +93,8 @@ public class GameSession
                 FriendlyTowers.Add(tower);
             else
                 EnemyTowers.Add(tower);
+
+            Console.WriteLine($"[GameSession] Created {setup.Faction} {setup.Type} tower at ({tower.Position.X:F0}, {tower.Position.Y:F0}) HP={tower.CurrentHP}");
         }
 
         // 상태 초기화
@@ -101,6 +104,8 @@ public class GameSession
         Result = GameResult.InProgress;
         WinConditionType = null;
         IsOvertime = false;
+
+        Console.WriteLine($"[GameSession] Tower initialization complete: {FriendlyTowers.Count} friendly, {EnemyTowers.Count} enemy");
     }
 
     /// <summary>

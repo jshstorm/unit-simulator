@@ -245,11 +245,16 @@ public class SimulatorCore
     /// <param name="referencePath">레퍼런스 데이터 경로 (null이면 기본 경로 사용)</param>
     public void Initialize(InitialSetup? setup, string? referencePath = null)
     {
+        Console.WriteLine("[SimulatorCore] Initialize() called");
+
         // Load reference data
         LoadReferences(referencePath);
 
         // Use default setup if not provided
+        bool usingDefault = setup == null;
         setup ??= InitialSetup.CreateClashRoyaleStandard();
+        Console.WriteLine($"[SimulatorCore] Using {(usingDefault ? "default ClashRoyale" : "custom")} InitialSetup");
+        Console.WriteLine($"[SimulatorCore] Setup contains {setup.Towers.Count} towers, {setup.InitialUnits.Count} initial units");
 
         // Set main target on the right side of the simulation area
         _mainTarget = new Vector2(GameConstants.SIMULATION_WIDTH - 100, GameConstants.SIMULATION_HEIGHT / 2);
@@ -260,10 +265,12 @@ public class SimulatorCore
 
         // Spawn initial units (empty in standard Clash Royale mode)
         SpawnInitialUnits(setup.InitialUnits);
+        Console.WriteLine($"[SimulatorCore] Spawned {_friendlySquad.Count} friendly, {_enemySquad.Count} enemy initial units");
 
         // Initialize Pathfinding
         _pathfindingGrid = new PathfindingGrid(GameConstants.SIMULATION_WIDTH, GameConstants.SIMULATION_HEIGHT, GameConstants.UNIT_RADIUS);
         _pathfinder = new AStarPathfinder(_pathfindingGrid);
+        Console.WriteLine("[SimulatorCore] Pathfinding grid initialized");
 
         // Initialize towers from setup
         _gameSession.InitializeTowers(setup.Towers);
@@ -272,6 +279,7 @@ public class SimulatorCore
         if (setup.GameTime != null)
         {
             _gameSession.MaxGameTime = setup.GameTime.MaxGameTime;
+            Console.WriteLine($"[SimulatorCore] Game time set to {setup.GameTime.MaxGameTime}s");
         }
 
         _isInitialized = true;
@@ -279,7 +287,7 @@ public class SimulatorCore
         _currentWave = 0;
         _hasMoreWaves = true;
 
-        Console.WriteLine("SimulatorCore initialized successfully.");
+        Console.WriteLine($"[SimulatorCore] Initialization complete. Towers: {_gameSession.FriendlyTowers.Count}F/{_gameSession.EnemyTowers.Count}E");
     }
 
     /// <summary>
@@ -953,6 +961,7 @@ public class SimulatorCore
 
     public void Reset()
     {
+        Console.WriteLine("[SimulatorCore] Reset() called");
         _isRunning = false;
         _isInitialized = false;
         _currentFrame = 0;
@@ -965,5 +974,6 @@ public class SimulatorCore
         _pathfinder = null;
 
         Initialize();
+        Console.WriteLine("[SimulatorCore] Reset complete");
     }
 }

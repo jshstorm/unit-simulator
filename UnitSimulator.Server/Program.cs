@@ -57,6 +57,8 @@ public class Program
 
     private static async Task RunServerAsync(int port)
     {
+        Console.WriteLine("[Server] Starting in WebSocket server mode...");
+
         var sessionOptions = new SessionManagerOptions
         {
             MaxSessions = 100,
@@ -69,11 +71,11 @@ public class Program
         Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
-            Console.WriteLine("\nShutting down server...");
+            Console.WriteLine("\n[Server] Shutting down...");
             server.Stop();
         };
 
-        Console.WriteLine("Press Ctrl+C to stop the server.");
+        Console.WriteLine("[Server] Ready. Waiting for client connections...");
         Console.WriteLine($"API endpoints:");
         Console.WriteLine($"  - GET  http://localhost:{port}/sessions     (list sessions)");
         Console.WriteLine($"  - POST http://localhost:{port}/sessions     (create session)");

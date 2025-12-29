@@ -179,6 +179,16 @@ public class SimulationSession : IDisposable
         // Clear EmptyAt when a client connects
         EmptyAt = null;
 
+        // Initialize simulator if not already initialized so clients can see initial state
+        if (!Simulator.IsInitialized)
+        {
+            Console.WriteLine($"[Session {SessionId[..8]}] Initializing simulator for first client");
+            Simulator.Initialize();
+            var initialFrame = Simulator.GetCurrentFrameData();
+            RecordFrame(initialFrame);
+            Console.WriteLine($"[Session {SessionId[..8]}] Initial frame recorded: {initialFrame.FriendlyTowers.Count}F/{initialFrame.EnemyTowers.Count}E towers");
+        }
+
         UpdateActivity();
         Console.WriteLine($"[Session {SessionId[..8]}] Client {clientId[..8]} joined as {role}. Total: {ClientCount}");
 
@@ -351,6 +361,7 @@ public class SimulationSession : IDisposable
 
     public void ResetSimulation()
     {
+        Console.WriteLine($"[Session {SessionId[..8]}] ResetSimulation() called");
         _playCts?.Cancel();
         Simulator.Stop();
         Simulator.Reset();
@@ -362,6 +373,7 @@ public class SimulationSession : IDisposable
 
         var initialFrame = Simulator.GetCurrentFrameData();
         RecordFrame(initialFrame);
+        Console.WriteLine($"[Session {SessionId[..8]}] Reset complete: {initialFrame.FriendlyTowers.Count}F/{initialFrame.EnemyTowers.Count}E towers");
         UpdateActivity();
     }
 
