@@ -88,6 +88,35 @@ simulator.ModifyUnit(unitId, faction, unit => {
 3. **콜백 확장**: 외부 연동이 필요하면 `ISimulatorCallbacks`에 이벤트 추가.
 4. **문서 갱신**: 새로운 연동점이나 흐름을 이 문서에 반영.
 
+## 길찾기 랜덤 테스트 도구
+
+유닛 길찾기(A*) 동작을 검증하기 위해 랜덤 장애물 맵과 시작/목표 지점을 생성하는 테스트 러너가 추가되었습니다.
+
+- 설정: `UnitSimulator.Core/Pathfinding/PathfindingTestSettings.cs`
+- 실행 로직: `UnitSimulator.Core/Pathfinding/PathfindingTestRunner.cs`
+- 결과/리포트: `UnitSimulator.Core/Pathfinding/PathfindingTestReport.cs`
+
+### 사용 예시
+
+```csharp
+var settings = new PathfindingTestSettings
+{
+    Seed = 1234,
+    ObstacleDensity = 0.2f,
+    ScenarioCount = 50
+};
+
+var runner = new PathfindingTestRunner();
+var report = runner.Run(settings);
+report.SaveToJson("output/pathfinding-report.json");
+```
+
+### 결과 확인 포인트
+
+- `report.Results`: 시나리오별 경로 성공 여부, 길이, 노드 수 등 개별 지표
+- `report.Summary`: 성공률 및 평균 통계
+- `report.Obstacles`: 생성된 장애물 사각형 목록 (시각화 연동용)
+
 ### 성능/테스트
 
 - 렌더링은 필요 시에만 켜고, 회귀는 JSON 프레임으로 비교.

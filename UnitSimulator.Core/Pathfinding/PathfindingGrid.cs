@@ -9,6 +9,10 @@ namespace UnitSimulator.Core.Pathfinding
         private readonly float _nodeSize;
         private readonly PathNode[,] _grid;
 
+        public int Width => _width;
+        public int Height => _height;
+        public float NodeSize => _nodeSize;
+
         public PathfindingGrid(float mapWidth, float mapHeight, float nodeSize)
         {
             _nodeSize = nodeSize;
