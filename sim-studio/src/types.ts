@@ -145,11 +145,12 @@ export interface SimulationCompleteMessage extends WebSocketMessage {
 }
 
 // Commands that can be sent to the server
-export type CommandType = 
+export type CommandType =
   | 'move'
   | 'set_health'
   | 'kill'
   | 'revive'
+  | 'spawn'
   | 'start'
   | 'stop'
   | 'step'
@@ -158,6 +159,8 @@ export type CommandType =
   | 'reset'
   | 'get_session_log';
 
+export type UnitRole = 'Melee' | 'Ranged';
+
 export interface Command {
   type: CommandType;
   unitId?: number;
@@ -165,6 +168,8 @@ export interface Command {
   position?: SerializableVector2;
   health?: number;
   frameNumber?: number;
+  role?: UnitRole;
+  hp?: number;
 }
 
 // Session logging types

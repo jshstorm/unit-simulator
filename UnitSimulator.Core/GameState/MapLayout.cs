@@ -109,7 +109,7 @@ public static class MapLayout
     public const float RightBridgeXMax = 2800f;
 
     // ════════════════════════════════════════════════════════════════════════
-    // 스폰 영역
+    // 스폰 영역 (진영별 배치 가능 범위)
     // ════════════════════════════════════════════════════════════════════════
 
     /// <summary>
@@ -121,6 +121,60 @@ public static class MapLayout
     /// Enemy 유닛 스폰 가능 Y 최소값 (강 이후)
     /// </summary>
     public const float EnemySpawnYMin = RiverYMax;
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 스폰 존 (유닛 생성 시 기본 영역)
+    // ════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Friendly 스폰 존 X 최소값
+    /// </summary>
+    public const float FriendlySpawnZoneXMin = 800f;
+
+    /// <summary>
+    /// Friendly 스폰 존 X 최대값
+    /// </summary>
+    public const float FriendlySpawnZoneXMax = 2400f;
+
+    /// <summary>
+    /// Friendly 스폰 존 Y 최소값 (King Tower 전방)
+    /// </summary>
+    public const float FriendlySpawnZoneYMin = 1400f;
+
+    /// <summary>
+    /// Friendly 스폰 존 Y 최대값
+    /// </summary>
+    public const float FriendlySpawnZoneYMax = 1700f;
+
+    /// <summary>
+    /// Enemy 스폰 존 X 최소값
+    /// </summary>
+    public const float EnemySpawnZoneXMin = 800f;
+
+    /// <summary>
+    /// Enemy 스폰 존 X 최대값
+    /// </summary>
+    public const float EnemySpawnZoneXMax = 2400f;
+
+    /// <summary>
+    /// Enemy 스폰 존 Y 최소값 (King Tower 전방)
+    /// </summary>
+    public const float EnemySpawnZoneYMin = 3400f;
+
+    /// <summary>
+    /// Enemy 스폰 존 Y 최대값
+    /// </summary>
+    public const float EnemySpawnZoneYMax = 3700f;
+
+    /// <summary>
+    /// Friendly 기본 스폰 위치 (King Tower 전방 중앙)
+    /// </summary>
+    public static Vector2 FriendlyDefaultSpawnPosition => new(1600f, 1500f);
+
+    /// <summary>
+    /// Enemy 기본 스폰 위치 (King Tower 전방 중앙)
+    /// </summary>
+    public static Vector2 EnemyDefaultSpawnPosition => new(1600f, 3600f);
 
     // ════════════════════════════════════════════════════════════════════════
     // 유틸리티 메서드

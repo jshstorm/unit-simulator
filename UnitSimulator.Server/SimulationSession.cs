@@ -377,6 +377,31 @@ public class SimulationSession : IDisposable
         UpdateActivity();
     }
 
+    /// <summary>
+    /// Spawns a unit at the specified position.
+    /// </summary>
+    public Unit SpawnUnit(
+        System.Numerics.Vector2 position,
+        UnitRole role,
+        UnitFaction faction,
+        int? hp = null,
+        float? speed = null,
+        float? turnSpeed = null)
+    {
+        var callbacks = new SessionCallbacks(this);
+        var unit = Simulator.InjectUnit(
+            position,
+            role,
+            faction,
+            hp,
+            speed,
+            turnSpeed,
+            callbacks
+        );
+        Console.WriteLine($"[Session {SessionId[..8]}] Spawned {faction} {role} unit at ({position.X:F0}, {position.Y:F0})");
+        return unit;
+    }
+
     #endregion
 
     #region Frame History

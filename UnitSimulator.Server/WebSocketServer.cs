@@ -734,6 +734,10 @@ public class WebSocketServer : IDisposable
                 await HandleReviveCommandAsync(client, session, commandData);
                 break;
 
+            case "spawn":
+                await HandleSpawnCommandAsync(client, session, commandData);
+                break;
+
             case "get_session_log":
                 await HandleGetSessionLogAsync(client, session);
                 break;
@@ -944,6 +948,75 @@ public class WebSocketServer : IDisposable
         {
             await session.BroadcastAsync("frame", session.Simulator.GetCurrentFrameData());
         }
+    }
+
+    private async Task HandleSpawnCommandAsync(SessionClient client, SimulationSession session, JsonElement data)
+    {
+        // Parse position
+        if (!data.TryGetProperty("position", out var posElement))
+        {
+            await session.SendToClientAsync(client, "error", new { message = "Missing position for spawn command" });
+            return;
+        }
+
+        float x = 0, y = 0;
+        if (posElement.TryGetProperty("x", out var xElem)) x = xElem.GetSingle();
+        if (posElement.TryGetProperty("y", out var yElem)) y = yElem.GetSingle();
+
+        // Parse faction (default: Enemy)
+        var faction = UnitFaction.Enemy;
+        if (data.TryGetProperty("faction", out var factionElem))
+        {
+            var factionStr = factionElem.GetString();
+            if (factionStr?.Equals("Friendly", StringComparison.OrdinalIgnoreCase) == true)
+                faction = UnitFaction.Friendly;
+        }
+
+        // Parse role (default: Melee)
+        var role = UnitRole.Melee;
+        if (data.TryGetProperty("role", out var roleElem))
+        {
+            var roleStr = roleElem.GetString();
+            if (roleStr?.Equals("Ranged", StringComparison.OrdinalIgnoreCase) == true)
+                role = UnitRole.Ranged;
+        }
+
+        // Parse optional unitId (for reference-based spawning)
+        string? unitId = null;
+        if (data.TryGetProperty("unitId", out var unitIdElem))
+        {
+            unitId = unitIdElem.GetString();
+        }
+
+        // Parse optional HP
+        int? hp = null;
+        if (data.TryGetProperty("hp", out var hpElem))
+        {
+            hp = hpElem.GetInt32();
+        }
+
+        Console.WriteLine($"[WebSocketServer] Spawn command: faction={faction}, role={role}, pos=({x}, {y}), unitId={unitId ?? "default"}");
+
+        var position = new System.Numerics.Vector2(x, y);
+
+        // Use session.SpawnUnit to spawn the unit
+        var unit = session.SpawnUnit(
+            position,
+            role,
+            faction,
+            hp
+        );
+
+        await session.SendToClientAsync(client, "command_ack", new
+        {
+            command = "spawn",
+            success = true,
+            unitLabel = unit.Label,
+            unitId = unit.Id,
+            faction = faction.ToString()
+        });
+
+        await session.BroadcastAsync("frame", session.Simulator.GetCurrentFrameData());
     }
 
     private async Task HandleGetSessionLogAsync(SessionClient client, SimulationSession session)
