@@ -8,6 +8,8 @@ import CommandPanel from './components/CommandPanel';
 import SimulationControls from './components/SimulationControls';
 import SessionSelector from './components/SessionSelector';
 import DataEditor from './components/DataEditor';
+import ResizablePanel from './components/ResizablePanel';
+import VerticalResizablePanel from './components/VerticalResizablePanel';
 
 const API_BASE_URL = 'http://localhost:5001';
 const WS_BASE_URL = 'ws://localhost:5001/ws';
@@ -280,74 +282,94 @@ function App() {
       </header>
 
       <main className="main-content">
-        <div className="simulation-view">
-          <div className="panel">
-            <h2>Simulation Frame</h2>
-            {frameData && (
-              <div className="frame-info">
-                <span>Frame: {frameData.frameNumber}</span>
-                <span>Wave: {frameData.currentWave}</span>
-                <span>Friendlies: {frameData.livingFriendlyCount}</span>
-                <span>Enemies: {frameData.livingEnemyCount}</span>
-              </div>
-            )}
-          </div>
+        <ResizablePanel
+          leftPanel={
+            <div className="simulation-view">
+              <VerticalResizablePanel
+                topPanel={
+                  <>
+                    <div className="panel">
+                      <h2>Simulation Frame</h2>
+                      {frameData && (
+                        <div className="frame-info">
+                          <span>Frame: {frameData.frameNumber}</span>
+                          <span>Wave: {frameData.currentWave}</span>
+                          <span>Friendlies: {frameData.livingFriendlyCount}</span>
+                          <span>Enemies: {frameData.livingEnemyCount}</span>
+                        </div>
+                      )}
+                    </div>
 
-          <SimulationCanvas
-            frameData={frameData}
-            selectedUnitId={selectedUnitId}
-            selectedFaction={selectedFaction}
-            focusMode={focusMode}
-            onUnitSelect={handleUnitSelect}
-            onCanvasClick={(x, y) => {
-              if (selectedUnit && !selectedUnit.isDead && canControl) {
-                handleSendCommand({
-                  type: 'move',
-                  unitId: selectedUnit.id,
-                  faction: selectedUnit.faction,
-                  position: { x, y },
-                });
-              }
-            }}
-          />
+                    <SimulationCanvas
+                      frameData={frameData}
+                      selectedUnitId={selectedUnitId}
+                      selectedFaction={selectedFaction}
+                      focusMode={focusMode}
+                      onUnitSelect={handleUnitSelect}
+                      onCanvasClick={(x, y) => {
+                        if (selectedUnit && !selectedUnit.isDead && canControl) {
+                          handleSendCommand({
+                            type: 'move',
+                            unitId: selectedUnit.id,
+                            faction: selectedUnit.faction,
+                            position: { x, y },
+                          });
+                        }
+                      }}
+                    />
+                  </>
+                }
+                bottomPanel={
+                  <>
+                    <SimulationControls
+                      onPlayPause={handlePlayPause}
+                      onStep={handleStep}
+                      onStepBack={handleStepBack}
+                      onSeek={handleSeek}
+                      seekValue={seekFrameInput}
+                      onSeekValueChange={setSeekFrameInput}
+                      onReset={handleReset}
+                      isConnected={connectionStatus === 'connected'}
+                      isPlaying={isPlaying}
+                      focusMode={focusMode}
+                      onFocusModeChange={setFocusMode}
+                      disabled={!canControl}
+                    />
 
-          <SimulationControls
-            onPlayPause={handlePlayPause}
-            onStep={handleStep}
-            onStepBack={handleStepBack}
-            onSeek={handleSeek}
-            seekValue={seekFrameInput}
-            onSeekValueChange={setSeekFrameInput}
-            onReset={handleReset}
-            isConnected={connectionStatus === 'connected'}
-            isPlaying={isPlaying}
-            focusMode={focusMode}
-            onFocusModeChange={setFocusMode}
-            disabled={!canControl}
-          />
-
-          {!canControl && role === 'viewer' && (
-            <div className="viewer-notice">
-              You are viewing as a spectator. Only the session owner can control the simulation.
+                    {!canControl && role === 'viewer' && (
+                      <div className="viewer-notice">
+                        You are viewing as a spectator. Only the session owner can control the simulation.
+                      </div>
+                    )}
+                  </>
+                }
+                defaultTopHeight={85}
+                minTopHeight={60}
+                minBottomHeight={10}
+              />
             </div>
-          )}
-        </div>
+          }
+          rightPanel={
+            <div className="sidebar">
+              <UnitStateViewer
+                frameData={frameData}
+                selectedUnitId={selectedUnitId}
+                selectedFaction={selectedFaction}
+                onUnitSelect={handleUnitSelect}
+              />
 
-        <div className="sidebar">
-          <UnitStateViewer
-            frameData={frameData}
-            selectedUnitId={selectedUnitId}
-            selectedFaction={selectedFaction}
-            onUnitSelect={handleUnitSelect}
-          />
-
-          <CommandPanel
-            selectedUnit={selectedUnit}
-            onSendCommand={handleSendCommand}
-            isConnected={connectionStatus === 'connected'}
-            disabled={!canControl}
-          />
-        </div>
+              <CommandPanel
+                selectedUnit={selectedUnit}
+                onSendCommand={handleSendCommand}
+                isConnected={connectionStatus === 'connected'}
+                disabled={!canControl}
+              />
+            </div>
+          }
+          defaultLeftWidth={70}
+          minLeftWidth={40}
+          minRightWidth={20}
+        />
       </main>
 
       <style>{`

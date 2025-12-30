@@ -18,7 +18,7 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const AUTO_FIT_PADDING = 60;
 const AUTO_FIT_MIN_SIZE = 200;
-const AUTO_FIT_COOLDOWN_MS = 2000;
+const AUTO_FIT_COOLDOWN_MS = 5000; // Increased to 5 seconds to prevent jitter during manual zoom
 const CAMERA_PAN_SPEED = 1600;
 const CAMERA_ZOOM_SPEED = 1.5;
 
@@ -288,12 +288,23 @@ function SimulationCanvas({
     );
     const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, desiredScale / baseScale));
     const nextPanX = canvasSize.width / 2 - centerX * baseScale * nextZoom;
-    const nextPanY = canvasSize.height / 2 - centerY * baseScale * nextZoom;
+    // Flip Y coordinate to match screen space (Y=0 at top)
+    const nextPanY = canvasSize.height / 2 - (WORLD_HEIGHT - centerY) * baseScale * nextZoom;
 
     const { zoom, panX, panY } = targetViewRef.current;
     const zoomDelta = Math.abs(zoom - nextZoom);
     const panDelta = Math.abs(panX - nextPanX) + Math.abs(panY - nextPanY);
+
+    // Don't auto-fit if the deltas are very small (already at target)
     if (zoomDelta < 0.001 && panDelta < 0.5) {
+      return;
+    }
+
+    // Don't auto-fit if user has manually zoomed/panned and the difference is significant
+    // This prevents jittering when user manually controls the view
+    const manuallyAdjusted = (zoomDelta > 0.05 || panDelta > 50) &&
+                            (now - lastManualInteractionRef.current < AUTO_FIT_COOLDOWN_MS);
+    if (manuallyAdjusted) {
       return;
     }
 
