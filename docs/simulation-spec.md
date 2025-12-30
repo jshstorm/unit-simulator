@@ -3,16 +3,16 @@
 이 문서는 시뮬레이션에서 유닛이 따르는 규칙과 알고리즘을 구조적으로 정리합니다.
 
 ## 1. 시뮬레이션 루프
-- `Program.Main`에서 매 프레임마다 타워/적/아군 업데이트 → 렌더링 순서로 진행합니다.
+- `SimulatorCore.Step()`에서 프레임별로 커맨드 처리 → 유닛/타워 업데이트 → 이벤트 적용 → `FrameData` 생성 → 콜백 통지 순서로 진행합니다.
 - **종료 조건**:
   - King Tower가 파괴됨 (즉시 승패 결정)
   - 정규 시간(3분) 종료 시 크라운 차이로 승패 결정
   - 연장전(5분) 종료 시 타워 HP 비율로 승패 결정
-  - 최대 프레임 수(`Constants.MAX_FRAMES`) 도달
+  - 최대 프레임 수(`GameConstants.MAX_FRAMES`) 도달
 
 ## 2. 유닛 기본 스펙
-- 속성: 위치/속도/전방 벡터, 반지름(`Constants.UNIT_RADIUS`), 이동 속도, 회전 속도, 체력, 역할(근접/원거리), 진영(아군/적)
-- 체력: 아군 기본 HP `FRIENDLY_HP`가 적 HP `ENEMY_HP`의 약 10배 (현재 100 vs 10)
+- 속성: 위치/속도/전방 벡터, 반지름(`GameConstants.UNIT_RADIUS`), 이동 속도, 회전 속도, 체력, 역할(근접/원거리), 진영(아군/적)
+- 체력: 아군 기본 HP `GameConstants.FRIENDLY_HP`가 적 HP `GameConstants.ENEMY_HP`의 약 10배 (현재 100 vs 10)
 - 공격 사거리: 근접 `radius * 3`, 원거리 `radius * 6`
 - 공격 슬롯: 목표 주변에 8개, 가장 가까운 슬롯을 점유해 겹침 방지
 
@@ -45,6 +45,30 @@
 - **경로 반환 규칙**:
   - 반환 경로는 웨이포인트 리스트이며 시작 노드는 포함하지 않음
 
+- **실행 검증 시나리오 (M1.5)**:
+  - 목적: A* 경로가 장애물 회피/코너 컷 금지 규칙을 유지하는지 실행 수준에서 확인
+  - 실행 방법(고정 설정):
+    - `PathfindingTestSettings`: `Seed=1234`, `ObstacleDensity=0.15`, `ScenarioCount=25`
+    - `MapWidth/MapHeight/NodeSize`는 기본값(`GameConstants.SIMULATION_*`, `GameConstants.UNIT_RADIUS`) 사용
+    - 실행: `dotnet run --project tools/unit-dev-tool` → 메뉴 `Pathfinding Report`
+  - 실행 코드(예시):
+    ```csharp
+    var settings = new PathfindingTestSettings
+    {
+        Seed = 1234,
+        ObstacleDensity = 0.15f,
+        ScenarioCount = 25
+    };
+
+    var runner = new PathfindingTestRunner();
+    var report = runner.Run(settings);
+    report.SaveToJson("output/pathfinding-report.json");
+    ```
+  - 성공 기준(초기 기준선 수립 목적):
+    - `output/pathfinding-report.json` 생성
+    - `report.Summary.SuccessRate` 및 `AveragePathLength`가 기록됨
+    - 변경 전후 비교 시 성공률 급락 또는 평균 경로 길이 급증 시 원인 분석
+
 - **RTS 확장 고려사항**:
   - 유닛 반경 마스킹, 동적 장애물 재탐색, 경로 스무딩
   - 지형 비용 가중치, 군집 이동(코리도어/플로우 필드)
@@ -69,13 +93,10 @@
 ### 3.3 경로 탐색 vs 회피 규칙
 - **전역/로컬 역할 분리**: A*는 전역 경로, Avoidance는 로컬 회피 전담
 - **스티어링 합성**:
-  - 최종 방향 = `Normalize(pathDir * 1.0 + avoidanceDir * 0.7 + separationDir * 0.4)`
-  - 회피 강도가 높을수록 속도를 줄여 진동 방지
-- **재경로 조건**:
-  - 일정 프레임 동안 waypoint 접근 실패 시 재탐색
-  - 재탐색 쿨다운으로 과도한 재계산 방지
-- **웨이포인트 스킵**:
-  - 회피로 waypoint 주변에 오래 머무르면 다음 waypoint로 진행
+  - 최종 방향 = `Normalize(steeringDir + separationVector + avoidanceVector)` (가중치 합성 없음)
+  - 최종 속도는 `unit.GetEffectiveSpeed()`를 사용
+- **재경로 조건(현재 구현)**:
+  - 목적지가 `GameConstants.DESTINATION_THRESHOLD` 이상 바뀌면 경로 재계산
 
 ## 4. 아군 분대 로직 (`SquadBehavior`)
 - **랠리 & 대형**: 최초 적 탐지 시 랠리 포인트를 잡고 리더 이동, 나머지는 회전 오프셋으로 대형 유지
@@ -184,10 +205,10 @@
 - 모든 시도 실패 시 기본 스폰 위치 사용
 
 ### 7.4 수동 스폰 vs 자동 스폰
-| 구분 | 위치 지정 | 유효성 검사 |
-|------|----------|------------|
-| 수동 (GUI) | 사용자 지정 | 진영 영역 검사 |
-| 자동 (spawn 명령) | 스폰 영역 내 | 겹침 방지 적용 |
+- 수동 스폰 (GUI):
+  - `SimulationSession.TryResolveManualSpawnPosition`에서 맵 범위/강 영역/겹침 검사 후 위치 보정
+- 자동 스폰 (웨이브/DeathSpawn/SpawnUnitCommand):
+  - 소스에서 제공한 위치를 그대로 사용 (별도 맵 범위/겹침 검사 없음)
 
 ### 7.5 타워 위치 참조
 | 타워 | Friendly | Enemy |
@@ -203,12 +224,12 @@
 
 - 사전 정의 좌표로 적 웨이브 생성
 - 전 웨이브 처치 시 다음 웨이브 스폰
-- 최대 웨이브 수 `Constants.MAX_WAVES`
+- 최대 웨이브 수 `GameConstants.MAX_WAVES`
 
 ## 9. 렌더링 (`Renderer`)
 - 유닛, 슬롯, 전방 벡터, 최근 공격선, 회피 목표, **타워 상태**를 프레임 이미지로 저장
 
 ## 10. 알려진 문제 및 개선점
-- **경로 탐색 부재**: 장애물 인식 부족으로 복잡 지형에서 길찾기 제한
+- **장애물 데이터 미연동**: 런타임에서는 PathfindingGrid에 장애물이 채워지지 않아 복잡 지형 회피가 제한됨
 - **성능**: 유닛 수 증가 시 O(N^2) 계산 부하
 - **단순한 대형 유지**: 좁은 길에서 대형 붕괴 가능

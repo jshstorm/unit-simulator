@@ -723,6 +723,7 @@ public void Simulation_SameInput_ProducesSameOutput()
 - [ ] `EnemyBehavior` 및 `SquadBehavior`가 `AStarPathfinder`를 사용하여 경로를 생성하고 따라 이동하도록 수정됨
 - [ ] 간단한 장애물이 배치된 테스트 환경에서 유닛이 장애물을 성공적으로 우회하여 목적지에 도달함
 - [ ] 경로 탐색 관련 유닛 테스트가 추가되고 모두 통과함
+- [ ] 실행 검증 시나리오 리포트 생성 (`docs/simulation-spec.md`의 "실행 검증 시나리오 (M1.5)" 기준)
 
 ---
 
