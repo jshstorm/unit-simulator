@@ -30,6 +30,21 @@ public class ReferenceManager
     public ReferenceTable<SkillReference>? Skills => GetTable<SkillReference>("skills");
 
     /// <summary>
+    /// Buildings 테이블 편의 접근자
+    /// </summary>
+    public ReferenceTable<BuildingReference>? Buildings => GetTable<BuildingReference>("buildings");
+
+    /// <summary>
+    /// Spells 테이블 편의 접근자
+    /// </summary>
+    public ReferenceTable<SpellReference>? Spells => GetTable<SpellReference>("spells");
+
+    /// <summary>
+    /// Towers 테이블 편의 접근자
+    /// </summary>
+    public ReferenceTable<TowerReference>? Towers => GetTable<TowerReference>("towers");
+
+    /// <summary>
     /// 테이블 핸들러를 등록합니다.
     /// </summary>
     /// <typeparam name="T">레퍼런스 데이터 타입</typeparam>
@@ -123,6 +138,9 @@ public class ReferenceManager
         var manager = new ReferenceManager();
         manager.RegisterHandler<UnitReference>("units", ReferenceHandlers.ParseUnits);
         manager.RegisterHandler<SkillReference>("skills", ReferenceHandlers.ParseSkills);
+        manager.RegisterHandler<BuildingReference>("buildings", ReferenceHandlers.ParseBuildings);
+        manager.RegisterHandler<SpellReference>("spells", ReferenceHandlers.ParseSpells);
+        manager.RegisterHandler<TowerReference>("towers", ReferenceHandlers.ParseTowers);
         return manager;
     }
 

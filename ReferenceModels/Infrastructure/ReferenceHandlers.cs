@@ -43,4 +43,46 @@ public static class ReferenceHandlers
 
         return new ReferenceTable<SkillReference>(tableName, data);
     }
+
+    /// <summary>
+    /// buildings.json을 파싱합니다.
+    /// </summary>
+    /// <param name="tableName">테이블 이름</param>
+    /// <param name="jsonContent">JSON 내용</param>
+    /// <returns>BuildingReference 테이블</returns>
+    public static ReferenceTable<BuildingReference> ParseBuildings(string tableName, string jsonContent)
+    {
+        var data = JsonSerializer.Deserialize<Dictionary<string, BuildingReference>>(jsonContent, JsonOptions)
+            ?? new Dictionary<string, BuildingReference>();
+
+        return new ReferenceTable<BuildingReference>(tableName, data);
+    }
+
+    /// <summary>
+    /// spells.json을 파싱합니다.
+    /// </summary>
+    /// <param name="tableName">테이블 이름</param>
+    /// <param name="jsonContent">JSON 내용</param>
+    /// <returns>SpellReference 테이블</returns>
+    public static ReferenceTable<SpellReference> ParseSpells(string tableName, string jsonContent)
+    {
+        var data = JsonSerializer.Deserialize<Dictionary<string, SpellReference>>(jsonContent, JsonOptions)
+            ?? new Dictionary<string, SpellReference>();
+
+        return new ReferenceTable<SpellReference>(tableName, data);
+    }
+
+    /// <summary>
+    /// towers.json을 파싱합니다.
+    /// </summary>
+    /// <param name="tableName">테이블 이름</param>
+    /// <param name="jsonContent">JSON 내용</param>
+    /// <returns>TowerReference 테이블</returns>
+    public static ReferenceTable<TowerReference> ParseTowers(string tableName, string jsonContent)
+    {
+        var data = JsonSerializer.Deserialize<Dictionary<string, TowerReference>>(jsonContent, JsonOptions)
+            ?? new Dictionary<string, TowerReference>();
+
+        return new ReferenceTable<TowerReference>(tableName, data);
+    }
 }
