@@ -1,0 +1,50 @@
+{
+  "tombstone": {
+    "displayName": "Tombstone",
+    "type": "Spawner",
+    "maxHP": 800,
+    "radius": 2.0,
+    "lifetime": 40.0,
+    "spawnUnitId": "skeleton",
+    "spawnCount": 4,
+    "spawnInterval": 2.9,
+    "firstSpawnDelay": 3.0,
+    "skills": []
+  },
+  "cannon": {
+    "displayName": "Cannon",
+    "type": "Defensive",
+    "maxHP": 1050,
+    "radius": 2.0,
+    "lifetime": 40.0,
+    "attackRange": 5.5,
+    "damage": 243,
+    "attackSpeed": 0.8,
+    "canTarget": "Ground",
+    "skills": []
+  },
+  "tesla": {
+    "displayName": "Tesla",
+    "type": "Defensive",
+    "maxHP": 1050,
+    "radius": 2.0,
+    "lifetime": 40.0,
+    "attackRange": 5.5,
+    "damage": 130,
+    "attackSpeed": 1.1,
+    "canTarget": "GroundAndAir",
+    "skills": []
+  },
+  "goblin_hut": {
+    "displayName": "Goblin Hut",
+    "type": "Spawner",
+    "maxHP": 1232,
+    "radius": 2.5,
+    "lifetime": 60.0,
+    "spawnUnitId": "spear_goblin",
+    "spawnCount": 1,
+    "spawnInterval": 4.9,
+    "firstSpawnDelay": 1.0,
+    "skills": []
+  }
+}

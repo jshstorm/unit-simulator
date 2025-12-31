@@ -1,0 +1,62 @@
+{
+  "fireball": {
+    "displayName": "Fireball",
+    "type": "Instant",
+    "radius": 2.5,
+    "damage": 572,
+    "buildingDamageMultiplier": 0.4,
+    "affectedTargets": "GroundAndAir",
+    "castDelay": 1.0
+  },
+  "zap": {
+    "displayName": "Zap",
+    "type": "Instant",
+    "radius": 2.5,
+    "damage": 159,
+    "affectedTargets": "GroundAndAir",
+    "appliedEffect": "Stunned",
+    "effectDuration": 0.5,
+    "castDelay": 1.0
+  },
+  "poison": {
+    "displayName": "Poison",
+    "type": "AreaOverTime",
+    "radius": 3.5,
+    "duration": 8.0,
+    "damagePerTick": 95,
+    "tickInterval": 1.0,
+    "affectedTargets": "GroundAndAir",
+    "appliedEffect": "Slowed",
+    "effectMagnitude": 0.3,
+    "castDelay": 0.5
+  },
+  "freeze": {
+    "displayName": "Freeze",
+    "type": "Utility",
+    "radius": 3.0,
+    "duration": 4.0,
+    "affectedTargets": "GroundAndAir",
+    "appliedEffect": "Frozen",
+    "castDelay": 1.0
+  },
+  "rage": {
+    "displayName": "Rage",
+    "type": "Utility",
+    "radius": 5.0,
+    "duration": 8.0,
+    "affectedTargets": "GroundAndAir",
+    "appliedEffect": "Raged",
+    "effectMagnitude": 0.35,
+    "castDelay": 0.5
+  },
+  "graveyard": {
+    "displayName": "Graveyard",
+    "type": "Spawning",
+    "radius": 4.0,
+    "duration": 10.0,
+    "spawnUnitId": "skeleton",
+    "spawnCount": 20,
+    "spawnInterval": 0.5,
+    "castDelay": 1.0
+  }
+}

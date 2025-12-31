@@ -7,9 +7,13 @@
     "turnSpeed": 0.12,
     "attackRange": 25,
     "radius": 15,
-    "role": "Melee",
+    "role": "Swarm",
     "layer": "Ground",
     "canTarget": "Ground",
+    "entityType": "Troop",
+    "attackType": "MeleeShort",
+    "attackSpeed": 1.0,
+    "spawnCount": 3,
     "skills": []
   },
   "golemite": {
@@ -117,9 +121,12 @@
     "turnSpeed": 0.1,
     "attackRange": 60,
     "radius": 20,
-    "role": "Melee",
+    "role": "MiniTank",
     "layer": "Ground",
     "canTarget": "Ground",
+    "entityType": "Troop",
+    "attackType": "Melee",
+    "attackSpeed": 1.1,
     "skills": []
   },
   "prince": {
@@ -130,9 +137,12 @@
     "turnSpeed": 0.1,
     "attackRange": 80,
     "radius": 25,
-    "role": "Melee",
+    "role": "GlassCannon",
     "layer": "Ground",
     "canTarget": "Ground",
+    "entityType": "Troop",
+    "attackType": "MeleeMedium",
+    "attackSpeed": 1.4,
     "skills": [
       "prince_charge"
     ]
@@ -145,9 +155,12 @@
     "turnSpeed": 0.1,
     "attackRange": 180,
     "radius": 25,
-    "role": "Ranged",
+    "role": "Support",
     "layer": "Air",
     "canTarget": "GroundAndAir",
+    "entityType": "Troop",
+    "attackType": "Ranged",
+    "attackSpeed": 1.5,
     "skills": [
       "baby_dragon_splash"
     ]
@@ -160,9 +173,13 @@
     "turnSpeed": 0.08,
     "attackRange": 60,
     "radius": 40,
-    "role": "Melee",
+    "role": "Tank",
     "layer": "Ground",
-    "canTarget": "Ground",
+    "canTarget": "Buildings",
+    "targetPriority": "Buildings",
+    "entityType": "Troop",
+    "attackType": "Melee",
+    "attackSpeed": 2.5,
     "skills": [
       "golem_death_spawn",
       "golem_death_damage"

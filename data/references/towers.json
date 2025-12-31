@@ -1,0 +1,22 @@
+{
+  "princess_tower": {
+    "displayName": "Princess Tower",
+    "type": "Princess",
+    "maxHP": 2534,
+    "damage": 90,
+    "attackSpeed": 0.8,
+    "attackRadius": 7.5,
+    "radius": 2.5,
+    "canTarget": "GroundAndAir"
+  },
+  "king_tower": {
+    "displayName": "King Tower",
+    "type": "King",
+    "maxHP": 4824,
+    "damage": 109,
+    "attackSpeed": 1.0,
+    "attackRadius": 7.0,
+    "radius": 3.0,
+    "canTarget": "GroundAndAir"
+  }
+}
