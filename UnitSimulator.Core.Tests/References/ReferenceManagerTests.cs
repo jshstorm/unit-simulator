@@ -194,6 +194,80 @@ public class ReferenceManagerTests
     }
 
     [Fact]
+    public void UnitReference_CreateUnit_WithShieldHP_ShouldAutoAddShield()
+    {
+        // Arrange
+        var unitRef = new UnitReference
+        {
+            DisplayName = "Test Guard",
+            MaxHP = 500,
+            ShieldHP = 300
+        };
+
+        // Act
+        var unit = unitRef.CreateUnit("test_guard", 1, UnitFaction.Friendly, new Vector2(0, 0));
+
+        // Assert
+        unit.HasAbility(AbilityType.Shield).Should().BeTrue();
+        unit.MaxShieldHP.Should().Be(300);
+    }
+
+    [Fact]
+    public void UnitReference_CreateUnits_WithSpawnCount_ShouldCreateMultiple()
+    {
+        // Arrange
+        var unitRef = new UnitReference
+        {
+            DisplayName = "Skeleton",
+            MaxHP = 80,
+            Damage = 80,
+            SpawnCount = 3
+        };
+
+        // Act
+        var units = unitRef.CreateUnits("skeleton", 100, UnitFaction.Friendly, new Vector2(500, 500), spawnRadius: 30f);
+
+        // Assert
+        units.Should().HaveCount(3);
+        units[0].Id.Should().Be(100);
+        units[1].Id.Should().Be(101);
+        units[2].Id.Should().Be(102);
+
+        // 모든 유닛이 중심점으로부터 spawnRadius 내에 있어야 함
+        foreach (var unit in units)
+        {
+            var distance = Vector2.Distance(unit.Position, new Vector2(500, 500));
+            distance.Should().BeApproximately(30f, 0.01f);
+        }
+    }
+
+    [Fact]
+    public void SkillReference_ToAbilityData_StatusEffect_ShouldConvertCorrectly()
+    {
+        // Arrange
+        var statusEffectRef = new SkillReference
+        {
+            Type = "StatusEffect",
+            AppliedEffect = StatusEffectType.Stunned,
+            EffectDuration = 2.0f,
+            EffectMagnitude = 1.0f,
+            EffectRange = 50f,
+            AffectedTargets = TargetType.Ground
+        };
+
+        // Act
+        var statusEffect = statusEffectRef.ToAbilityData() as StatusEffectAbilityData;
+
+        // Assert
+        statusEffect.Should().NotBeNull();
+        statusEffect!.AppliedEffect.Should().Be(StatusEffectType.Stunned);
+        statusEffect.EffectDuration.Should().Be(2.0f);
+        statusEffect.EffectMagnitude.Should().Be(1.0f);
+        statusEffect.EffectRange.Should().Be(50f);
+        statusEffect.AffectedTargets.Should().Be(TargetType.Ground);
+    }
+
+    [Fact]
     public void ReferenceTable_GetAll_ShouldReturnAllItems()
     {
         // Arrange
