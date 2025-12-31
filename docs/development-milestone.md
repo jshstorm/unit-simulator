@@ -689,6 +689,8 @@ public void Simulation_SameInput_ProducesSameOutput()
 
 ### M1.5: 경로 탐색 시스템 구현
 
+**상태**: ✅ 완료
+
 **담당**: 코어 개발/아키텍처
 
 **작업 내용**:
@@ -719,11 +721,11 @@ public void Simulation_SameInput_ProducesSameOutput()
 **출력**: 경로 탐색 기능이 통합된 `UnitSimulator.Core`
 
 **완료 조건**:
-- [ ] `PathfindingGrid.cs` 및 `AStarPathfinder.cs` 클래스 파일 생성 및 구현 완료
-- [ ] `EnemyBehavior` 및 `SquadBehavior`가 `AStarPathfinder`를 사용하여 경로를 생성하고 따라 이동하도록 수정됨
-- [ ] 간단한 장애물이 배치된 테스트 환경에서 유닛이 장애물을 성공적으로 우회하여 목적지에 도달함
-- [ ] 경로 탐색 관련 유닛 테스트가 추가되고 모두 통과함
-- [ ] 실행 검증 시나리오 리포트 생성 (`docs/simulation-spec.md`의 "실행 검증 시나리오 (M1.5)" 기준)
+- [x] `PathfindingGrid.cs` 및 `AStarPathfinder.cs` 클래스 파일 생성 및 구현 완료
+- [x] `EnemyBehavior` 및 `SquadBehavior`가 `AStarPathfinder`를 사용하여 경로를 생성하고 따라 이동하도록 수정됨
+- [x] 간단한 장애물이 배치된 테스트 환경에서 유닛이 장애물을 성공적으로 우회하여 목적지에 도달함
+- [x] 경로 탐색 관련 유닛 테스트가 추가되고 모두 통과함
+- [x] 실행 검증 시나리오 리포트 생성 (`docs/simulation-spec.md`의 "실행 검증 시나리오 (M1.5)" 기준)
 
 ---
 
@@ -746,6 +748,7 @@ JSON 파일 기반의 데이터 드리븐 유닛 로딩 시스템 구현.
 │                                                              │
 │  data/references/          ReferenceManager                  │
 │  ├── units.json    ───►   ├── RegisterHandler<T>()          │
+│  ├── skills.json           ├── LoadAll(path)                 │
 │  ├── waves.json            ├── LoadAll(path)                 │
 │  └── ...                   └── Units / Waves / ...           │
 │                                     │                        │
@@ -765,7 +768,8 @@ JSON 파일 기반의 데이터 드리븐 유닛 로딩 시스템 구현.
 
 ```
 data/references/
-└── units.json          # 유닛 레퍼런스 데이터
+├── units.json          # 유닛 레퍼런스 데이터
+└── skills.json         # 스킬 레퍼런스 데이터
 ```
 
 **핵심 클래스**:
@@ -775,7 +779,7 @@ data/references/
 | `ReferenceManager` | 테이블 로딩/관리 매니저 |
 | `ReferenceTable<T>` | 제네릭 읽기 전용 테이블 |
 | `UnitReference` | JSON 직렬화 가능한 유닛 정의 |
-| `AbilityReferenceData` | 어빌리티 데이터 (다형성 지원) |
+| `SkillReference` | 스킬 데이터 (다형성 지원) |
 | `ReferenceHandlers` | JSON 파싱 핸들러 |
 
 **JSON 포맷 (Object 형식, ID as Key)**:
@@ -792,11 +796,18 @@ data/references/
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "DeathSpawn", "spawnUnitId": "golemite", "spawnCount": 2, "spawnRadius": 30 },
-      { "type": "DeathDamage", "damage": 270, "radius": 60 }
+    "skills": [
+      "golem_death_spawn",
+      "golem_death_damage"
     ]
   }
+}
+```
+
+```json
+{
+  "golem_death_spawn": { "type": "DeathSpawn", "spawnUnitId": "golemite", "spawnCount": 2, "spawnRadius": 30 },
+  "golem_death_damage": { "type": "DeathDamage", "damage": 270, "radius": 60 }
 }
 ```
 
@@ -811,7 +822,7 @@ manager.LoadAll("data/references");
 var golemRef = manager.Units?.Get("golem");
 if (golemRef != null)
 {
-    var unit = golemRef.CreateUnit("golem", id, faction, position);
+    var unit = golemRef.CreateUnit("golem", id, faction, position, manager);
 }
 ```
 
@@ -846,6 +857,7 @@ else
 - [x] AbilityReferenceData 다형성 변환 (ToAbilityData)
 - [x] SimulatorCore 통합 및 폴백 체인
 - [x] data/references/units.json 샘플 데이터 (13개 유닛)
+- [x] data/references/skills.json 샘플 데이터 (스킬 레퍼런스)
 - [x] 테스트 케이스 (6개)
 
 ---

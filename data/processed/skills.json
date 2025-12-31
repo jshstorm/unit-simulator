@@ -1,0 +1,46 @@
+{
+  "golemite_death_damage": {
+    "type": "DeathDamage",
+    "damage": 100,
+    "radius": 40
+  },
+  "elixir_golemite_death_spawn": {
+    "type": "DeathSpawn",
+    "spawnUnitId": "elixir_blob",
+    "spawnCount": 2,
+    "spawnRadius": 20
+  },
+  "guard_shield": {
+    "type": "Shield",
+    "maxShieldHP": 199
+  },
+  "prince_charge": {
+    "type": "ChargeAttack",
+    "triggerDistance": 150,
+    "requiredChargeDistance": 100,
+    "damageMultiplier": 2.0,
+    "speedMultiplier": 2.0
+  },
+  "baby_dragon_splash": {
+    "type": "SplashDamage",
+    "radius": 60,
+    "damageFalloff": 0
+  },
+  "golem_death_spawn": {
+    "type": "DeathSpawn",
+    "spawnUnitId": "golemite",
+    "spawnCount": 2,
+    "spawnRadius": 30
+  },
+  "golem_death_damage": {
+    "type": "DeathDamage",
+    "damage": 270,
+    "radius": 60
+  },
+  "lava_hound_death_spawn": {
+    "type": "DeathSpawn",
+    "spawnUnitId": "lava_pup",
+    "spawnCount": 6,
+    "spawnRadius": 40
+  }
+}

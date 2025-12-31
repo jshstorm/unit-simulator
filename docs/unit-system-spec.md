@@ -572,7 +572,7 @@ public class Unit
 | 항목 | 설명 | 난이도 |
 |------|------|--------|
 | UnitDefinition JSON | 유닛 스탯 외부화 | 중간 |
-| AbilityDefinition | 능력 데이터 외부화 | 중간 |
+| SkillDefinition | 스킬 데이터 외부화 | 중간 |
 | UnitFactory | 정의 기반 유닛 생성 | 중간 |
 | Balance Loader | 밸런스 데이터 로드 | 낮음 |
 
@@ -599,7 +599,7 @@ public class Unit
     "moveSpeed": 60,
     "radius": 20
   },
-  "abilities": []
+  "skills": []
 }
 ```
 
@@ -622,12 +622,8 @@ public class Unit
     "moveSpeed": 60,
     "radius": 25
   },
-  "abilities": [
-    {
-      "type": "SplashDamage",
-      "radius": 60,
-      "damageFalloff": 0
-    }
+  "skills": [
+    "baby_dragon_splash"
   ]
 }
 ```
@@ -651,13 +647,8 @@ public class Unit
     "moveSpeed": 60,
     "radius": 25
   },
-  "abilities": [
-    {
-      "type": "ChargeAttack",
-      "triggerDistance": 150,
-      "magnitude": 2.0,
-      "chargeSpeedMultiplier": 2.0
-    }
+  "skills": [
+    "prince_charge"
   ]
 }
 ```
@@ -681,17 +672,9 @@ public class Unit
     "moveSpeed": 30,
     "radius": 40
   },
-  "abilities": [
-    {
-      "type": "DeathSpawn",
-      "spawnUnitId": "golemite",
-      "spawnCount": 2
-    },
-    {
-      "type": "DeathDamage",
-      "damage": 270,
-      "radius": 60
-    }
+  "skills": [
+    "golem_death_spawn",
+    "golem_death_damage"
   ]
 }
 ```
@@ -715,19 +698,51 @@ public class Unit
     "spawnInterval": 3.0,
     "firstSpawnDelay": 1.0
   },
-  "abilities": [
-    {
-      "type": "DeathSpawn",
-      "spawnUnitId": "skeleton",
-      "spawnCount": 4
-    }
+  "skills": [
+    "tombstone_death_spawn"
   ]
 }
 ```
 
 ---
 
-### 10.6 Unit & Object Preview Images
+### 10.6 Sample Skill Definitions
+
+```json
+{
+  "baby_dragon_splash": {
+    "type": "SplashDamage",
+    "radius": 60,
+    "damageFalloff": 0
+  },
+  "prince_charge": {
+    "type": "ChargeAttack",
+    "triggerDistance": 150,
+    "requiredChargeDistance": 100,
+    "damageMultiplier": 2.0,
+    "speedMultiplier": 2.0
+  },
+  "golem_death_spawn": {
+    "type": "DeathSpawn",
+    "spawnUnitId": "golemite",
+    "spawnCount": 2,
+    "spawnRadius": 30
+  },
+  "golem_death_damage": {
+    "type": "DeathDamage",
+    "damage": 270,
+    "radius": 60
+  },
+  "tombstone_death_spawn": {
+    "type": "DeathSpawn",
+    "spawnUnitId": "skeleton",
+    "spawnCount": 4,
+    "spawnRadius": 30
+  }
+}
+```
+
+### 10.7 Unit & Object Preview Images
 
 Sim Studio 2D 프리뷰에서 사용할 아이콘 목록입니다. 모든 아이콘은
 `sim-studio/public/assets/previews` 아래에 있으며, Game Icons(CC BY 3.0)

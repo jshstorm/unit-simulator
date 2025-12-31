@@ -1,112 +1,186 @@
-[
-  {
-    "id": 1,
-    "name": "Infantry Squad Alpha",
-    "type": "Infantry",
-    "faction": "Friendly",
-    "health": 100,
-    "attack": 15,
-    "defense": 10,
-    "speed": 5,
-    "range": 2
+{
+  "skeleton": {
+    "displayName": "Skeleton",
+    "maxHP": 81,
+    "damage": 81,
+    "moveSpeed": 5.0,
+    "turnSpeed": 0.12,
+    "attackRange": 25,
+    "radius": 15,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": []
   },
-  {
-    "id": 2,
-    "name": "Tank Division Bravo",
-    "type": "Armor",
-    "faction": "Friendly",
-    "health": 250,
-    "attack": 45,
-    "defense": 35,
-    "speed": 3,
-    "range": 5
+  "golemite": {
+    "displayName": "Golemite",
+    "maxHP": 900,
+    "damage": 50,
+    "moveSpeed": 3.0,
+    "turnSpeed": 0.1,
+    "attackRange": 30,
+    "radius": 25,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": [
+      "golemite_death_damage"
+    ]
   },
-  {
-    "id": 3,
-    "name": "Sniper Team Charlie",
-    "type": "Infantry",
-    "faction": "Friendly",
-    "health": 60,
-    "attack": 50,
-    "defense": 5,
-    "speed": 4,
-    "range": 10
+  "lava_pup": {
+    "displayName": "Lava Pup",
+    "maxHP": 209,
+    "damage": 55,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 60,
+    "radius": 15,
+    "role": "Ranged",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "skills": []
   },
-  {
-    "id": 4,
-    "name": "Artillery Battery Delta",
-    "type": "Artillery",
-    "faction": "Friendly",
-    "health": 80,
-    "attack": 70,
-    "defense": 10,
-    "speed": 1,
-    "range": 15
+  "minion": {
+    "displayName": "Minion",
+    "maxHP": 252,
+    "damage": 84,
+    "moveSpeed": 5.0,
+    "turnSpeed": 0.1,
+    "attackRange": 60,
+    "radius": 18,
+    "role": "Ranged",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "skills": []
   },
-  {
-    "id": 5,
-    "name": "Scout Recon Echo",
-    "type": "Recon",
-    "faction": "Friendly",
-    "health": 50,
-    "attack": 10,
-    "defense": 8,
-    "speed": 8,
-    "range": 3
+  "bat": {
+    "displayName": "Bat",
+    "maxHP": 81,
+    "damage": 81,
+    "moveSpeed": 5.5,
+    "turnSpeed": 0.15,
+    "attackRange": 25,
+    "radius": 12,
+    "role": "Melee",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "skills": []
   },
-  {
-    "id": 6,
-    "name": "Enemy Infantry Red",
-    "type": "Infantry",
-    "faction": "Enemy",
-    "health": 100,
-    "attack": 14,
-    "defense": 12,
-    "speed": 5,
-    "range": 2
+  "elixir_golemite": {
+    "displayName": "Elixir Golemite",
+    "maxHP": 560,
+    "damage": 42,
+    "moveSpeed": 3.5,
+    "turnSpeed": 0.1,
+    "attackRange": 30,
+    "radius": 22,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": [
+      "elixir_golemite_death_spawn"
+    ]
   },
-  {
-    "id": 7,
-    "name": "Enemy Tank Black",
-    "type": "Armor",
-    "faction": "Enemy",
-    "health": 230,
-    "attack": 40,
-    "defense": 38,
-    "speed": 3,
-    "range": 5
+  "elixir_blob": {
+    "displayName": "Elixir Blob",
+    "maxHP": 280,
+    "damage": 21,
+    "moveSpeed": 3.5,
+    "turnSpeed": 0.1,
+    "attackRange": 25,
+    "radius": 18,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": []
   },
-  {
-    "id": 8,
-    "name": "Enemy Sniper Shadow",
-    "type": "Infantry",
-    "faction": "Enemy",
-    "health": 55,
-    "attack": 48,
-    "defense": 4,
-    "speed": 4,
-    "range": 10
+  "guard": {
+    "displayName": "Guard",
+    "maxHP": 90,
+    "damage": 90,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 30,
+    "radius": 18,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": [
+      "guard_shield"
+    ]
   },
-  {
-    "id": 9,
-    "name": "Enemy Artillery Storm",
-    "type": "Artillery",
-    "faction": "Enemy",
-    "health": 75,
-    "attack": 65,
-    "defense": 8,
-    "speed": 1,
-    "range": 14
+  "knight": {
+    "displayName": "Knight",
+    "maxHP": 1938,
+    "damage": 202,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 60,
+    "radius": 20,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": []
   },
-  {
-    "id": 10,
-    "name": "Enemy Scout Viper",
-    "type": "Recon",
-    "faction": "Enemy",
-    "health": 45,
-    "attack": 12,
-    "defense": 6,
-    "speed": 9,
-    "range": 3
+  "prince": {
+    "displayName": "Prince",
+    "maxHP": 1669,
+    "damage": 392,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 80,
+    "radius": 25,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": [
+      "prince_charge"
+    ]
+  },
+  "baby_dragon": {
+    "displayName": "Baby Dragon",
+    "maxHP": 1152,
+    "damage": 160,
+    "moveSpeed": 4.5,
+    "turnSpeed": 0.1,
+    "attackRange": 180,
+    "radius": 25,
+    "role": "Ranged",
+    "layer": "Air",
+    "canTarget": "GroundAndAir",
+    "skills": [
+      "baby_dragon_splash"
+    ]
+  },
+  "golem": {
+    "displayName": "Golem",
+    "maxHP": 5984,
+    "damage": 270,
+    "moveSpeed": 2.0,
+    "turnSpeed": 0.08,
+    "attackRange": 60,
+    "radius": 40,
+    "role": "Melee",
+    "layer": "Ground",
+    "canTarget": "Ground",
+    "skills": [
+      "golem_death_spawn",
+      "golem_death_damage"
+    ]
+  },
+  "lava_hound": {
+    "displayName": "Lava Hound",
+    "maxHP": 3500,
+    "damage": 55,
+    "moveSpeed": 2.0,
+    "turnSpeed": 0.08,
+    "attackRange": 60,
+    "radius": 35,
+    "role": "Melee",
+    "layer": "Air",
+    "canTarget": "Ground",
+    "skills": [
+      "lava_hound_death_spawn"
+    ]
   }
-]
+}

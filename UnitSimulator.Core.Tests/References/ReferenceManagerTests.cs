@@ -49,20 +49,25 @@ public class ReferenceManagerTests
     }
 
     [Fact]
-    public void LoadAll_WithAbilities_ShouldParseAbilities()
+    public void LoadAll_WithSkills_ShouldParseSkills()
     {
         // Arrange
-        var json = @"{
+        var unitsJson = @"{
             ""golem"": {
                 ""displayName"": ""Golem"",
                 ""maxHP"": 5000,
-                ""abilities"": [
-                    { ""type"": ""DeathSpawn"", ""spawnUnitId"": ""golemite"", ""spawnCount"": 2 },
-                    { ""type"": ""DeathDamage"", ""damage"": 200, ""radius"": 50 }
+                ""skills"": [
+                    ""golem_death_spawn"",
+                    ""golem_death_damage""
                 ]
             }
         }";
-        File.WriteAllText(Path.Combine(_testDataPath, "units.json"), json);
+        var skillsJson = @"{
+            ""golem_death_spawn"": { ""type"": ""DeathSpawn"", ""spawnUnitId"": ""golemite"", ""spawnCount"": 2 },
+            ""golem_death_damage"": { ""type"": ""DeathDamage"", ""damage"": 200, ""radius"": 50 }
+        }";
+        File.WriteAllText(Path.Combine(_testDataPath, "units.json"), unitsJson);
+        File.WriteAllText(Path.Combine(_testDataPath, "skills.json"), skillsJson);
 
         var manager = ReferenceManager.CreateWithDefaultHandlers();
         manager.LoadAll(_testDataPath, _ => { });
@@ -72,9 +77,9 @@ public class ReferenceManagerTests
 
         // Assert
         golem.Should().NotBeNull();
-        golem!.Abilities.Should().HaveCount(2);
-        golem.Abilities[0].Type.Should().Be("DeathSpawn");
-        golem.Abilities[1].Type.Should().Be("DeathDamage");
+        golem!.Skills.Should().HaveCount(2);
+        manager.Skills.Should().NotBeNull();
+        manager.Skills!.Count.Should().Be(2);
     }
 
     [Fact]
@@ -126,10 +131,10 @@ public class ReferenceManagerTests
     }
 
     [Fact]
-    public void AbilityReferenceData_ToAbilityData_ShouldConvertCorrectly()
+    public void SkillReference_ToAbilityData_ShouldConvertCorrectly()
     {
         // Arrange
-        var deathSpawnRef = new AbilityReferenceData
+        var deathSpawnRef = new SkillReference
         {
             Type = "DeathSpawn",
             SpawnUnitId = "minion",
@@ -137,7 +142,7 @@ public class ReferenceManagerTests
             SpawnRadius = 40f
         };
 
-        var shieldRef = new AbilityReferenceData
+        var shieldRef = new SkillReference
         {
             Type = "Shield",
             MaxShieldHP = 500,
@@ -157,6 +162,35 @@ public class ReferenceManagerTests
         shield.Should().NotBeNull();
         shield!.MaxShieldHP.Should().Be(500);
         shield.BlocksStun.Should().BeTrue();
+    }
+
+    [Fact]
+    public void UnitReference_CreateUnit_ShouldResolveSkills()
+    {
+        // Arrange
+        var manager = new ReferenceManager();
+        var skills = new System.Collections.Generic.Dictionary<string, SkillReference>
+        {
+            ["test_shield"] = new SkillReference
+            {
+                Type = "Shield",
+                MaxShieldHP = 200
+            }
+        };
+        manager.RegisterTable(new ReferenceTable<SkillReference>("skills", skills));
+
+        var unitRef = new UnitReference
+        {
+            DisplayName = "Test Guard",
+            Skills = new System.Collections.Generic.List<string> { "test_shield" }
+        };
+
+        // Act
+        var unit = unitRef.CreateUnit("test_guard", 2, UnitFaction.Friendly, new Vector2(0, 0), manager);
+
+        // Assert
+        unit.HasAbility(AbilityType.Shield).Should().BeTrue();
+        unit.MaxShieldHP.Should().Be(200);
     }
 
     [Fact]

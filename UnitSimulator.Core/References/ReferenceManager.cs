@@ -25,6 +25,11 @@ public class ReferenceManager
     public ReferenceTable<UnitReference>? Units => GetTable<UnitReference>("units");
 
     /// <summary>
+    /// Skills 테이블 편의 접근자
+    /// </summary>
+    public ReferenceTable<SkillReference>? Skills => GetTable<SkillReference>("skills");
+
+    /// <summary>
     /// 테이블 핸들러를 등록합니다.
     /// </summary>
     /// <typeparam name="T">레퍼런스 데이터 타입</typeparam>
@@ -117,6 +122,7 @@ public class ReferenceManager
     {
         var manager = new ReferenceManager();
         manager.RegisterHandler<UnitReference>("units", ReferenceHandlers.ParseUnits);
+        manager.RegisterHandler<SkillReference>("skills", ReferenceHandlers.ParseSkills);
         return manager;
     }
 

@@ -10,7 +10,7 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": []
+    "skills": []
   },
   "golemite": {
     "displayName": "Golemite",
@@ -23,8 +23,8 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "DeathDamage", "damage": 100, "radius": 40 }
+    "skills": [
+      "golemite_death_damage"
     ]
   },
   "lava_pup": {
@@ -38,7 +38,7 @@
     "role": "Ranged",
     "layer": "Air",
     "canTarget": "GroundAndAir",
-    "abilities": []
+    "skills": []
   },
   "minion": {
     "displayName": "Minion",
@@ -51,7 +51,7 @@
     "role": "Ranged",
     "layer": "Air",
     "canTarget": "GroundAndAir",
-    "abilities": []
+    "skills": []
   },
   "bat": {
     "displayName": "Bat",
@@ -64,7 +64,7 @@
     "role": "Melee",
     "layer": "Air",
     "canTarget": "GroundAndAir",
-    "abilities": []
+    "skills": []
   },
   "elixir_golemite": {
     "displayName": "Elixir Golemite",
@@ -77,8 +77,8 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "DeathSpawn", "spawnUnitId": "elixir_blob", "spawnCount": 2, "spawnRadius": 20 }
+    "skills": [
+      "elixir_golemite_death_spawn"
     ]
   },
   "elixir_blob": {
@@ -92,7 +92,7 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": []
+    "skills": []
   },
   "guard": {
     "displayName": "Guard",
@@ -105,8 +105,8 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "Shield", "maxShieldHP": 199 }
+    "skills": [
+      "guard_shield"
     ]
   },
   "knight": {
@@ -120,7 +120,7 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": []
+    "skills": []
   },
   "prince": {
     "displayName": "Prince",
@@ -133,8 +133,8 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "ChargeAttack", "triggerDistance": 150, "requiredChargeDistance": 100, "damageMultiplier": 2.0, "speedMultiplier": 2.0 }
+    "skills": [
+      "prince_charge"
     ]
   },
   "baby_dragon": {
@@ -148,8 +148,8 @@
     "role": "Ranged",
     "layer": "Air",
     "canTarget": "GroundAndAir",
-    "abilities": [
-      { "type": "SplashDamage", "radius": 60, "damageFalloff": 0 }
+    "skills": [
+      "baby_dragon_splash"
     ]
   },
   "golem": {
@@ -163,9 +163,9 @@
     "role": "Melee",
     "layer": "Ground",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "DeathSpawn", "spawnUnitId": "golemite", "spawnCount": 2, "spawnRadius": 30 },
-      { "type": "DeathDamage", "damage": 270, "radius": 60 }
+    "skills": [
+      "golem_death_spawn",
+      "golem_death_damage"
     ]
   },
   "lava_hound": {
@@ -179,8 +179,8 @@
     "role": "Melee",
     "layer": "Air",
     "canTarget": "Ground",
-    "abilities": [
-      { "type": "DeathSpawn", "spawnUnitId": "lava_pup", "spawnCount": 6, "spawnRadius": 40 }
+    "skills": [
+      "lava_hound_death_spawn"
     ]
   }
 }

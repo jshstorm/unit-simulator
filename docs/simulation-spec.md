@@ -50,7 +50,9 @@
   - 실행 방법(고정 설정):
     - `PathfindingTestSettings`: `Seed=1234`, `ObstacleDensity=0.15`, `ScenarioCount=25`
     - `MapWidth/MapHeight/NodeSize`는 기본값(`GameConstants.SIMULATION_*`, `GameConstants.UNIT_RADIUS`) 사용
-    - 실행: `dotnet run --project tools/unit-dev-tool` → 메뉴 `Pathfinding Report`
+    - 실행(터미널):
+      - `dotnet run --project tools/unit-dev-tool` → 메뉴 `Pathfinding Report`
+      - `dotnet run --project tools/unit-dev-tool` → 메뉴 `Pathfinding SVG` (선택) → 시나리오 인덱스 입력
   - 실행 코드(예시):
     ```csharp
     var settings = new PathfindingTestSettings

@@ -345,7 +345,7 @@ public class SimulatorCore
         Unit unit;
         if (unitRef != null)
         {
-            unit = unitRef.CreateUnit(unitId, id, faction, position);
+            unit = unitRef.CreateUnit(unitId, id, faction, position, _referenceManager);
             if (hpOverride.HasValue)
             {
                 unit.HP = hpOverride.Value;
@@ -828,7 +828,7 @@ public class SimulatorCore
         var unitRef = _referenceManager?.Units?.Get(request.UnitId);
         if (unitRef != null)
         {
-            unit = unitRef.CreateUnit(request.UnitId, id, request.Faction, request.Position);
+            unit = unitRef.CreateUnit(request.UnitId, id, request.Faction, request.Position, _referenceManager);
             displayName = unitRef.DisplayName;
 
             if (request.HP > 0)
