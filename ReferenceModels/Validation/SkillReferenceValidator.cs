@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ReferenceModels.Models;
+using ReferenceModels.Models.Enums;
 
 namespace ReferenceModels.Validation;
 
@@ -71,6 +72,19 @@ public class SkillReferenceValidator : IValidator<SkillReference>
                 warnings.Add($"[{id}] Unknown skill type: {skill.Type}");
                 break;
         }
+
+        // Phase 4 상태 효과 필드 검증
+        if (skill.AppliedEffect != StatusEffectType.None)
+        {
+            if (skill.EffectDuration <= 0)
+                errors.Add($"[{id}] AppliedEffect is set but EffectDuration must be positive");
+
+            if (skill.EffectRange > 0 && skill.AffectedTargets == TargetType.None)
+                warnings.Add($"[{id}] EffectRange is set but AffectedTargets is None");
+        }
+
+        if (skill.EffectRange < 0)
+            errors.Add($"[{id}] EffectRange cannot be negative");
 
         return new ValidationResult
         {

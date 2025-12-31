@@ -32,6 +32,16 @@ public class UnitReferenceValidator : IValidator<UnitReference>
         if (unit.TurnSpeed < 0)
             errors.Add($"[{id}] TurnSpeed cannot be negative (got {unit.TurnSpeed})");
 
+        // Phase 2 새 필드 검증
+        if (unit.AttackSpeed <= 0)
+            errors.Add($"[{id}] AttackSpeed must be positive (got {unit.AttackSpeed})");
+
+        if (unit.ShieldHP < 0)
+            errors.Add($"[{id}] ShieldHP cannot be negative (got {unit.ShieldHP})");
+
+        if (unit.SpawnCount <= 0)
+            errors.Add($"[{id}] SpawnCount must be positive (got {unit.SpawnCount})");
+
         // 선택 필드 경고
         if (string.IsNullOrWhiteSpace(unit.DisplayName))
             warnings.Add($"[{id}] DisplayName is empty");
