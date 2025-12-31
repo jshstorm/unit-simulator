@@ -167,4 +167,40 @@ public static class ReferenceExtensions
         }
         return result;
     }
+
+    /// <summary>
+    /// TowerReference를 기반으로 Tower 인스턴스를 생성합니다.
+    /// </summary>
+    /// <param name="towerRef">타워 레퍼런스 데이터</param>
+    /// <param name="id">타워 ID</param>
+    /// <param name="faction">소속 진영</param>
+    /// <param name="position">타워 위치</param>
+    /// <param name="initialHP">초기 HP (null이면 MaxHP 사용)</param>
+    /// <param name="isActivated">활성화 여부 (null이면 타입에 따라 자동 설정)</param>
+    /// <returns>생성된 Tower 인스턴스</returns>
+    public static Tower CreateTower(
+        this TowerReference towerRef,
+        int id,
+        UnitFaction faction,
+        Vector2 position,
+        int? initialHP = null,
+        bool? isActivated = null)
+    {
+        return new Tower
+        {
+            Id = id,
+            Type = towerRef.Type,
+            Faction = faction,
+            Position = position,
+            Radius = towerRef.Radius,
+            AttackRange = towerRef.AttackRadius,
+            MaxHP = towerRef.MaxHP,
+            CurrentHP = initialHP ?? towerRef.MaxHP,
+            Damage = towerRef.Damage,
+            AttackSpeed = towerRef.AttackSpeed,
+            CanTarget = towerRef.CanTarget,
+            IsActivated = isActivated ?? (towerRef.Type == TowerType.Princess),
+            AttackCooldown = 0f
+        };
+    }
 }
