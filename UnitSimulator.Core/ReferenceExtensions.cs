@@ -11,6 +11,9 @@ public static class ReferenceExtensions
     /// <summary>
     /// UnitReference를 기반으로 Unit 인스턴스를 생성합니다.
     /// </summary>
+    /// <remarks>
+    /// 단일 유닛을 생성합니다. Swarm 유닛(SpawnCount > 1)의 경우 CreateUnits()를 사용하세요.
+    /// </remarks>
     public static Unit CreateUnit(
         this UnitReference unitRef,
         string unitId,
@@ -20,6 +23,18 @@ public static class ReferenceExtensions
         ReferenceManager? referenceManager = null)
     {
         var abilities = ConvertSkills(unitRef, referenceManager);
+
+        // ShieldHP가 설정되어 있고 Shield 능력이 없으면 자동으로 추가
+        if (unitRef.ShieldHP > 0 && !abilities.Any(a => a is ShieldData))
+        {
+            abilities.Add(new ShieldData
+            {
+                MaxShieldHP = unitRef.ShieldHP,
+                BlocksStun = false,
+                BlocksKnockback = false
+            });
+        }
+
         var unit = new Unit(
             position: position,
             radius: unitRef.Radius,
@@ -37,6 +52,46 @@ public static class ReferenceExtensions
             targetPriority: unitRef.TargetPriority
         );
         return unit;
+    }
+
+    /// <summary>
+    /// UnitReference를 기반으로 여러 Unit 인스턴스를 생성합니다 (Swarm 유닛용).
+    /// SpawnCount만큼 유닛을 생성하여 SpawnRadius 내에 분산 배치합니다.
+    /// </summary>
+    public static List<Unit> CreateUnits(
+        this UnitReference unitRef,
+        string unitId,
+        int startId,
+        UnitFaction faction,
+        Vector2 centerPosition,
+        float spawnRadius = 30f,
+        ReferenceManager? referenceManager = null)
+    {
+        var units = new List<Unit>();
+        var count = Math.Max(1, unitRef.SpawnCount);
+
+        for (int i = 0; i < count; i++)
+        {
+            // 원형으로 분산 배치
+            var angle = i * (2 * MathF.PI / count);
+            var offset = new Vector2(
+                MathF.Cos(angle) * spawnRadius,
+                MathF.Sin(angle) * spawnRadius
+            );
+            var position = centerPosition + offset;
+
+            var unit = unitRef.CreateUnit(
+                unitId,
+                startId + i,
+                faction,
+                position,
+                referenceManager
+            );
+
+            units.Add(unit);
+        }
+
+        return units;
     }
 
     /// <summary>
