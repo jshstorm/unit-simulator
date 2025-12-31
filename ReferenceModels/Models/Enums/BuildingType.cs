@@ -1,4 +1,4 @@
-namespace UnitSimulator.ReferenceModels.Models.Enums;
+namespace ReferenceModels.Models.Enums;
 
 /// <summary>
 /// 건물 유형

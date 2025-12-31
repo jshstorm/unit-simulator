@@ -749,17 +749,13 @@ JSON 파일 기반의 데이터 드리븐 유닛 로딩 시스템 구현.
 │  data/references/          ReferenceManager                  │
 │  ├── units.json    ───►   ├── RegisterHandler<T>()          │
 │  ├── skills.json           ├── LoadAll(path)                 │
-│  ├── waves.json            ├── LoadAll(path)                 │
-│  └── ...                   └── Units / Waves / ...           │
+│                          └── Units / Skills                  │
 │                                     │                        │
 │                                     ▼                        │
 │                            ReferenceTable<T>                 │
 │                            ├── Get(id)                       │
 │                            ├── TryGet(id, out T)             │
 │                            └── GetAll()                      │
-│                                     │                        │
-│                                     ▼                        │
-│                            UnitReference.CreateUnit()        │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -779,7 +775,7 @@ data/references/
 | `ReferenceManager` | 테이블 로딩/관리 매니저 |
 | `ReferenceTable<T>` | 제네릭 읽기 전용 테이블 |
 | `UnitReference` | JSON 직렬화 가능한 유닛 정의 |
-| `SkillReference` | 스킬 데이터 (다형성 지원) |
+| `SkillReference` | type 기반 단일 스킬 레퍼런스 모델 |
 | `ReferenceHandlers` | JSON 파싱 핸들러 |
 
 **JSON 포맷 (Object 형식, ID as Key)**:
@@ -822,43 +818,39 @@ manager.LoadAll("data/references");
 var golemRef = manager.Units?.Get("golem");
 if (golemRef != null)
 {
-    var unit = golemRef.CreateUnit("golem", id, faction, position, manager);
+    // golemRef는 읽기 전용 레퍼런스 데이터로 사용됨
 }
 ```
 
-**SimulatorCore 통합**:
+**현재 구현 범위**:
 
-```csharp
-// 폴백 체인: ReferenceManager → UnitRegistry → 기본값
-var unitRef = _referenceManager?.Units?.Get(request.UnitId);
-if (unitRef != null)
-{
-    // Reference에서 유닛 생성
-}
-else
-{
-    // UnitRegistry 폴백 (레거시 호환)
-}
-```
+- ReferenceModels는 JSON 로드/파싱/검증 레이어로, 런타임 유닛 생성 로직은 포함하지 않음
+- 기본 핸들러는 `units`, `skills`만 제공
+- 스킬은 단일 클래스 + `type` 문자열 기반으로 파라미터를 읽고, 검증은 `SkillReferenceValidator`가 담당
 
 **지원 어빌리티 타입**:
 
 | Type | 설명 | 주요 필드 |
 |------|------|-----------|
-| `DeathSpawn` | 사망 시 유닛 스폰 | spawnUnitId, spawnCount, spawnRadius |
-| `DeathDamage` | 사망 시 범위 피해 | damage, radius |
-| `Shield` | 보호막 | maxShieldHP, blocksStun |
-| `ChargeAttack` | 돌진 공격 | triggerDistance, damageMultiplier, speedMultiplier |
+| `DeathSpawn` | 사망 시 유닛 스폰 | spawnUnitId, spawnCount, spawnRadius, spawnUnitHP |
+| `DeathDamage` | 사망 시 범위 피해 | damage, radius, knockbackDistance |
+| `Shield` | 보호막 | maxShieldHP, blocksStun, blocksKnockback |
+| `ChargeAttack` | 돌진 공격 | triggerDistance, requiredChargeDistance, damageMultiplier, speedMultiplier |
 | `SplashDamage` | 범위 공격 | radius, damageFalloff |
 
 **완료 조건**:
 - [x] ReferenceManager, ReferenceTable<T> 클래스 구현
 - [x] UnitReference JSON 직렬화/역직렬화
-- [x] AbilityReferenceData 다형성 변환 (ToAbilityData)
-- [x] SimulatorCore 통합 및 폴백 체인
 - [x] data/references/units.json 샘플 데이터 (13개 유닛)
 - [x] data/references/skills.json 샘플 데이터 (스킬 레퍼런스)
-- [x] 테스트 케이스 (6개)
+
+**향후 작업 (문서 기준으로 필요하지만 미구현)**:
+- [ ] waves.json 등 추가 테이블을 위한 모델/핸들러/등록
+- [ ] UnitReference 기반의 유닛 생성 또는 별도 팩토리 계층 정의
+- [ ] 스킬 다형성 모델 및 type → AbilityData 변환기
+- [ ] Reference 로드 시 스키마/검증 자동 실행 및 실패 처리 정책
+- [ ] JSON Schema 기반 데이터 검증 파이프라인
+- [ ] Google Sheets 연동 방식 정의 및 구현 (필요 시)
 
 ---
 
@@ -899,6 +891,11 @@ data/
     └── report.json
 ```
 
+**현재 구현 범위**:
+- `data/references/`에 `units.json`, `skills.json`만 존재
+- `data/processed/`에도 동일 파일이 있으나 스키마 검증/변환 파이프라인은 없음
+- `schemas/`, `raw/`, `validation/` 디렉토리는 아직 구성되지 않음
+
 **스키마 예시**:
 
 ```json
@@ -933,6 +930,11 @@ data/
 - [ ] 모든 게임 데이터 타입에 대한 스키마 정의
 - [ ] 스키마 검증 통과하는 샘플 데이터
 - [ ] ReferenceModels가 스키마 기반으로 동작
+
+**향후 작업 (문서 기준으로 필요하지만 미구현)**:
+- [ ] JSON Schema 정의(`data/schemas/`) 및 검증 리포트 생성
+- [ ] `raw/` → `processed/` 변환 규칙 확정 및 정규화 스크립트 추가
+- [ ] 스키마 검증 실패 시 빌드/파이프라인 중단 처리
 
 ---
 
@@ -976,6 +978,14 @@ flowchart LR
 - [ ] 단일 명령으로 전체 파이프라인 실행
 - [ ] 스키마 검증 실패 시 빌드 중단
 - [ ] 변환 결과 diff 출력 (변경사항 추적)
+
+**현재 구현 범위**:
+- `package.json`에 `data:*` 스크립트가 존재하지만, 스키마/변환 파이프라인은 구성되지 않음
+- `data/processed/`에 `units.json`, `skills.json`이 존재하나 생성 규칙이 정의되지 않음
+
+**향후 작업 (문서 기준으로 필요하지만 미구현)**:
+- [ ] `data:normalize`, `data:validate`, `data:diff` 스크립트 실제 구현
+- [ ] 스키마 검증 실패 시 빌드 중단 규칙 추가
 
 ---
 
@@ -1023,6 +1033,16 @@ namespace UnitSimulator.Core.Data
 - [ ] Core가 외부 JSON에서 데이터 로드
 - [ ] 하드코딩된 상수값 제거
 - [ ] 핫 리로드 지원 (개발 모드)
+
+**현재 구현 범위**:
+- Core는 `ReferenceManager`를 통해 `data/references/*.json`을 직접 로드
+- `IDataProvider`/`JsonDataProvider` 구조는 없음
+- waves/balance 등 추가 데이터 타입 로드는 없음
+
+**향후 작업 (문서 기준으로 필요하지만 미구현)**:
+- [ ] `IDataProvider` 추상화 및 `JsonDataProvider` 구현
+- [ ] waves/balance 등 추가 데이터 타입 모델 및 로더 정의
+- [ ] 핫 리로드 정책/구현 추가
 
 ---
 

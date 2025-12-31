@@ -1,4 +1,4 @@
-namespace UnitSimulator.ReferenceModels.Models.Enums;
+namespace ReferenceModels.Models.Enums;
 
 /// <summary>
 /// 엔티티의 기본 유형

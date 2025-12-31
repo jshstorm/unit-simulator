@@ -1,4 +1,4 @@
-namespace UnitSimulator.ReferenceModels.Models.Enums;
+namespace ReferenceModels.Models.Enums;
 
 /// <summary>
 /// 공격 방식 및 사거리 유형

@@ -61,4 +61,28 @@ public class UnitReference
     /// <summary>보유 능력 목록</summary>
     [JsonPropertyName("skills")]
     public List<string> Skills { get; init; } = new();
+
+    // === 새로운 필드들 ===
+
+    /// <summary>엔티티 유형 (기본값: Troop)</summary>
+    [JsonPropertyName("entityType")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public EntityType EntityType { get; init; } = EntityType.Troop;
+
+    /// <summary>공격 방식 (기본값: Melee)</summary>
+    [JsonPropertyName("attackType")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public AttackType AttackType { get; init; } = AttackType.Melee;
+
+    /// <summary>초당 공격 횟수 (기본값: 1.0)</summary>
+    [JsonPropertyName("attackSpeed")]
+    public float AttackSpeed { get; init; } = 1.0f;
+
+    /// <summary>기본 쉴드 HP (기본값: 0)</summary>
+    [JsonPropertyName("shieldHP")]
+    public int ShieldHP { get; init; } = 0;
+
+    /// <summary>배치 시 생성되는 수량 (기본값: 1, Swarm용)</summary>
+    [JsonPropertyName("spawnCount")]
+    public int SpawnCount { get; init; } = 1;
 }
