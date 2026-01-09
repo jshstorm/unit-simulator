@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/mcp-schema.json",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-server-filesystem",
+        "/Users/storm/Documents/github/unit-simulator"
+      ],
+      "description": "프로젝트 파일 시스템 접근"
+    }
+  },
+  "resources": {
+    "specs": {
+      "path": "./specs",
+      "description": "스펙 문서 디렉터리 (작업 명세)"
+    },
+    "agents": {
+      "path": "./.claude/agents",
+      "description": "에이전트 정의 디렉터리"
+    },
+    "skills": {
+      "path": "./.claude/skills",
+      "description": "스킬 패키지 디렉터리"
+    },
+    "commands": {
+      "path": "./.claude/commands",
+      "description": "CLI 명령어 디렉터리"
+    },
+    "docs": {
+      "path": "./docs",
+      "description": "참조 문서 디렉터리"
+    },
+    "core": {
+      "path": "./UnitSimulator.Core",
+      "description": "Core 프로젝트 소스 코드"
+    },
+    "server": {
+      "path": "./UnitSimulator.Server",
+      "description": "Server 프로젝트 소스 코드"
+    },
+    "models": {
+      "path": "./ReferenceModels",
+      "description": "ReferenceModels 프로젝트"
+    },
+    "coreTests": {
+      "path": "./UnitSimulator.Core.Tests",
+      "description": "Core 테스트 프로젝트"
+    },
+    "modelsTests": {
+      "path": "./ReferenceModels.Tests",
+      "description": "Models 테스트 프로젝트"
+    },
+    "simStudio": {
+      "path": "./sim-studio",
+      "description": "React/TypeScript UI 프로젝트"
+    }
+  },
+  "settings": {
+    "defaultAgent": "planner",
+    "specsDir": "./specs",
+    "autoSyncDocs": true,
+    "language": "C#",
+    "framework": ".NET 9.0",
+    "testFramework": "xUnit"
+  }
+}
