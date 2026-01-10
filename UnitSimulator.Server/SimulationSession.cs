@@ -250,7 +250,8 @@ public class SimulationSession : IDisposable
             "start" or "stop" or "step" or "reset" => true,
             "move" or "set_health" or "kill" or "revive" => true,
             "step_back" => true,
-            "seek" or "get_session_log" => false,  // Viewer can use these
+            "activate_skill" => true,
+            "seek" or "get_session_log" or "get_tower_skills" => false,  // Viewer can use these
             _ => true  // Default to requiring owner permission
         };
     }

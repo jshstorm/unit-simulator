@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using UnitSimulator.Server.Handlers;
 
 namespace UnitSimulator;
 
@@ -740,6 +741,14 @@ public class WebSocketServer : IDisposable
 
             case "get_session_log":
                 await HandleGetSessionLogAsync(client, session);
+                break;
+
+            case "activate_skill":
+                await TowerSkillHandler.HandleActivateSkillAsync(client, session, commandData);
+                break;
+
+            case "get_tower_skills":
+                await TowerSkillHandler.HandleGetSkillsAsync(client, session, commandData);
                 break;
 
             default:
