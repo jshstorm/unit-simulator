@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unit-simulator.github.io/schemas/wave-definition.schema.json",
+  "title": "Wave Definition Schema",
+  "description": "Schema for wave spawn configuration in unit-simulator project (future implementation)",
+  "type": "object",
+  "patternProperties": {
+    "^wave_[0-9]+$": {
+      "$ref": "#/$defs/WaveDefinition"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "WaveDefinition": {
+      "type": "object",
+      "required": ["waveNumber", "spawns"],
+      "properties": {
+        "waveNumber": {
+          "type": "integer",
+          "description": "Wave number (1-based)",
+          "minimum": 1
+        },
+        "spawns": {
+          "type": "array",
+          "description": "List of unit spawns for this wave",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/SpawnDefinition"
+          }
+        },
+        "delayFrames": {
+          "type": "integer",
+          "description": "Optional delay in frames before wave starts",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "SpawnDefinition": {
+      "type": "object",
+      "required": ["unitId", "position"],
+      "properties": {
+        "unitId": {
+          "type": "string",
+          "description": "Reference to unit ID in units.json",
+          "pattern": "^[a-z_]+$"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "customHP": {
+          "type": "integer",
+          "description": "Optional custom HP override",
+          "minimum": 1
+        },
+        "customSpeed": {
+          "type": "number",
+          "description": "Optional custom speed override",
+          "minimum": 0,
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Position": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
