@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unit-simulator.github.io/schemas/unit-stats.schema.json",
+  "title": "Unit Statistics Schema",
+  "description": "Schema for unit reference data in unit-simulator project",
+  "type": "object",
+  "patternProperties": {
+    "^[a-z_]+$": {
+      "$ref": "#/$defs/UnitStats"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "UnitStats": {
+      "type": "object",
+      "required": [
+        "displayName",
+        "maxHP",
+        "damage",
+        "moveSpeed",
+        "turnSpeed",
+        "attackRange",
+        "radius",
+        "role",
+        "layer",
+        "canTarget",
+        "skills"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable unit name",
+          "minLength": 1
+        },
+        "maxHP": {
+          "type": "integer",
+          "description": "Maximum hit points",
+          "minimum": 1
+        },
+        "damage": {
+          "type": "integer",
+          "description": "Base damage per attack",
+          "minimum": 0
+        },
+        "moveSpeed": {
+          "type": "number",
+          "description": "Movement speed (units per frame)",
+          "minimum": 0,
+          "exclusiveMinimum": 0
+        },
+        "turnSpeed": {
+          "type": "number",
+          "description": "Rotation speed (radians per frame)",
+          "minimum": 0
+        },
+        "attackRange": {
+          "type": "integer",
+          "description": "Attack range in pixels",
+          "minimum": 0
+        },
+        "radius": {
+          "type": "integer",
+          "description": "Unit collision radius in pixels",
+          "minimum": 1
+        },
+        "role": {
+          "type": "string",
+          "description": "Unit tactical role",
+          "enum": [
+            "Melee",
+            "Ranged",
+            "Tank",
+            "MiniTank",
+            "Support",
+            "Swarm",
+            "GlassCannon"
+          ]
+        },
+        "layer": {
+          "type": "string",
+          "description": "Unit movement layer",
+          "enum": ["Ground", "Air"]
+        },
+        "canTarget": {
+          "type": "string",
+          "description": "Which layers this unit can attack",
+          "enum": ["Ground", "Air", "GroundAndAir", "Building"]
+        },
+        "targetPriority": {
+          "type": "string",
+          "description": "Optional targeting priority override",
+          "enum": ["Buildings", "Troops", "Nearest"]
+        },
+        "entityType": {
+          "type": "string",
+          "description": "Entity classification",
+          "enum": ["Troop", "Building", "Spell"]
+        },
+        "attackType": {
+          "type": "string",
+          "description": "Attack behavior type",
+          "enum": [
+            "Melee",
+            "MeleeShort",
+            "MeleeMedium",
+            "Ranged"
+          ]
+        },
+        "attackSpeed": {
+          "type": "number",
+          "description": "Attacks per second",
+          "minimum": 0,
+          "exclusiveMinimum": 0
+        },
+        "spawnCount": {
+          "type": "integer",
+          "description": "Number of units spawned (for swarm units)",
+          "minimum": 1
+        },
+        "skills": {
+          "type": "array",
+          "description": "List of skill IDs this unit possesses",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
