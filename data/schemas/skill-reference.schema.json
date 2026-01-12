@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unit-simulator.github.io/schemas/skill-reference.schema.json",
+  "title": "Skill Reference Schema",
+  "description": "Schema for skill/ability reference data in unit-simulator project",
+  "type": "object",
+  "patternProperties": {
+    "^[a-z_]+$": {
+      "$ref": "#/$defs/SkillReference"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "SkillReference": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Skill effect type identifier",
+          "enum": [
+            "DeathSpawn",
+            "DeathDamage",
+            "Shield",
+            "ChargeAttack",
+            "SplashDamage"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "DeathSpawn" }
+            }
+          },
+          "then": {
+            "required": ["type", "spawnUnitId", "spawnCount", "spawnRadius"],
+            "properties": {
+              "type": { "const": "DeathSpawn" },
+              "spawnUnitId": {
+                "type": "string",
+                "description": "ID of unit to spawn on death",
+                "pattern": "^[a-z_]+$"
+              },
+              "spawnCount": {
+                "type": "integer",
+                "description": "Number of units to spawn",
+                "minimum": 1
+              },
+              "spawnRadius": {
+                "type": "integer",
+                "description": "Spawn radius around death position",
+                "minimum": 1
+              },
+              "spawnUnitHP": {
+                "type": "integer",
+                "description": "Optional custom HP for spawned units",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "DeathDamage" }
+            }
+          },
+          "then": {
+            "required": ["type", "damage", "radius"],
+            "properties": {
+              "type": { "const": "DeathDamage" },
+              "damage": {
+                "type": "integer",
+                "description": "Damage dealt to units in radius",
+                "minimum": 0
+              },
+              "radius": {
+                "type": "integer",
+                "description": "Effect radius around death position",
+                "minimum": 1
+              },
+              "knockbackDistance": {
+                "type": "integer",
+                "description": "Optional knockback distance",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "Shield" }
+            }
+          },
+          "then": {
+            "required": ["type", "maxShieldHP"],
+            "properties": {
+              "type": { "const": "Shield" },
+              "maxShieldHP": {
+                "type": "integer",
+                "description": "Maximum shield hit points",
+                "minimum": 1
+              },
+              "blocksStun": {
+                "type": "boolean",
+                "description": "Whether shield blocks stun effects"
+              },
+              "blocksKnockback": {
+                "type": "boolean",
+                "description": "Whether shield blocks knockback"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "ChargeAttack" }
+            }
+          },
+          "then": {
+            "required": ["type", "triggerDistance", "requiredChargeDistance", "damageMultiplier", "speedMultiplier"],
+            "properties": {
+              "type": { "const": "ChargeAttack" },
+              "triggerDistance": {
+                "type": "integer",
+                "description": "Distance to start charging",
+                "minimum": 1
+              },
+              "requiredChargeDistance": {
+                "type": "integer",
+                "description": "Distance needed to charge before impact",
+                "minimum": 1
+              },
+              "damageMultiplier": {
+                "type": "number",
+                "description": "Damage multiplier when charged",
+                "minimum": 1.0
+              },
+              "speedMultiplier": {
+                "type": "number",
+                "description": "Speed multiplier when charging",
+                "minimum": 1.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "SplashDamage" }
+            }
+          },
+          "then": {
+            "required": ["type", "radius", "damageFalloff"],
+            "properties": {
+              "type": { "const": "SplashDamage" },
+              "radius": {
+                "type": "integer",
+                "description": "Splash damage radius",
+                "minimum": 1
+              },
+              "damageFalloff": {
+                "type": "number",
+                "description": "Damage reduction per unit distance (0 = no falloff)",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    }
+  }
+}
