@@ -864,6 +864,8 @@ if (golemRef != null)
 
 ### M2.1: 데이터 스키마 표준화
 
+**상태**: ✅ 완료
+
 **담당**: 데이터 아키텍처
 
 **작업 내용**:
@@ -927,9 +929,20 @@ data/
 **출력**: 표준화된 스키마 및 샘플 데이터
 
 **완료 조건**:
-- [ ] 모든 게임 데이터 타입에 대한 스키마 정의
-- [ ] 스키마 검증 통과하는 샘플 데이터
-- [ ] ReferenceModels가 스키마 기반으로 동작
+- [x] 모든 게임 데이터 타입에 대한 스키마 정의 (units, skills, towers, waves)
+- [x] 스키마 검증 통과하는 샘플 데이터 (units, skills, towers)
+- [x] npm 스크립트로 자동 검증 가능 (`npm run data:validate`)
+- [x] GitHub Actions CI/CD 자동 검증 (`.github/workflows/validate-data.yml`)
+
+**구현 결과**:
+- JSON Schema Draft-07 기반 스키마 4개 생성
+  - `data/schemas/unit-stats.schema.json` (13 units)
+  - `data/schemas/skill-reference.schema.json` (8 skills, 5 types with polymorphic validation)
+  - `data/schemas/tower-reference.schema.json` (2 towers)
+  - `data/schemas/wave-definition.schema.json` (future use)
+- ajv-cli 기반 검증 도구 통합
+- 검증 리포트: `data/validation/report.md`
+- CI 워크플로우로 PR/push 시 자동 검증
 
 **향후 작업 (문서 기준으로 필요하지만 미구현)**:
 - [ ] JSON Schema 정의(`data/schemas/`) 및 검증 리포트 생성

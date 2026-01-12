@@ -6,7 +6,11 @@
     "dev": "concurrently -n server,client -c blue,green \"dotnet run --project UnitSimulator.Server -- --server --port 5001\" \"npm run dev --prefix sim-studio\"",
     "build": "dotnet build UnitSimulator.Server && npm run build --prefix sim-studio",
     "server": "dotnet run --project UnitSimulator.Server -- --server --port 5001",
-    "client": "npm run dev --prefix sim-studio"
+    "client": "npm run dev --prefix sim-studio",
+    "data:validate": "npm run data:validate:units && npm run data:validate:skills && npm run data:validate:towers",
+    "data:validate:units": "ajv validate -s data/schemas/unit-stats.schema.json -d data/references/units.json",
+    "data:validate:skills": "ajv validate -s data/schemas/skill-reference.schema.json -d data/references/skills.json",
+    "data:validate:towers": "ajv validate -s data/schemas/tower-reference.schema.json -d data/references/towers.json"
   },
   "devDependencies": {
     "ajv-cli": "^5.0.0",

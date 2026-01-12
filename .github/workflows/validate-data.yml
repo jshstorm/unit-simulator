@@ -1,0 +1,39 @@
+name: Validate Data Files
+
+# 데이터 파일 변경 시 JSON Schema 검증
+on:
+  pull_request:
+    paths:
+      - 'data/references/*.json'
+      - 'data/schemas/*.schema.json'
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'data/references/*.json'
+      - 'data/schemas/*.schema.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 소스 코드 체크아웃
+    - uses: actions/checkout@v4
+
+    # 2. Node.js 설정 (ajv-cli 사용을 위해)
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    # 3. npm 의존성 설치 (ajv-cli, ajv-formats)
+    - name: Install dependencies
+      run: npm install
+
+    # 4. 데이터 파일 검증
+    - name: Validate data files
+      run: npm run data:validate
+
+    # 5. 검증 성공 메시지
+    - name: Validation complete
+      run: echo "✅ All data files passed JSON Schema validation"

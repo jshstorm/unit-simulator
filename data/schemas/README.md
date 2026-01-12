@@ -13,9 +13,18 @@
 
 ## 검증 방법
 
-### npm 스크립트 사용
+### npm 스크립트 사용 (권장)
+
+**모든 데이터 파일 검증:**
 ```bash
 npm run data:validate
+```
+
+**개별 데이터 파일 검증:**
+```bash
+npm run data:validate:units    # units.json 검증
+npm run data:validate:skills   # skills.json 검증
+npm run data:validate:towers   # towers.json 검증
 ```
 
 ### 수동 검증 (ajv-cli)
@@ -23,9 +32,15 @@ npm run data:validate
 npx ajv validate -s data/schemas/unit-stats.schema.json -d data/references/units.json
 ```
 
+### CI/CD 자동 검증
+
+GitHub Actions를 통해 PR 및 main 브랜치 푸시 시 자동으로 데이터 파일을 검증합니다:
+- Workflow: `.github/workflows/validate-data.yml`
+- 트리거: `data/references/*.json` 또는 `data/schemas/*.schema.json` 변경 시
+
 ## JSON Schema 버전
 
-이 프로젝트는 **JSON Schema Draft 2020-12** 표준을 따릅니다.
+이 프로젝트는 **JSON Schema Draft-07** 표준을 사용합니다 (ajv-cli 호환성을 위해).
 
 ## 참고 문서
 
