@@ -37,6 +37,27 @@ public class Unit
     public int FramesSinceSlotEvaluation { get; set; }
     public int FramesSinceTargetEvaluation { get; set; }
 
+    // Phase 2: Path Progress Tracking (Replan Triggers)
+    /// <summary>
+    /// 마지막 웨이포인트 진행 이후 경과 프레임 수
+    /// </summary>
+    public int FramesSinceLastWaypointProgress { get; set; }
+
+    /// <summary>
+    /// 회피 시작 이후 경과 프레임 수
+    /// </summary>
+    public int FramesSinceAvoidanceStart { get; set; }
+
+    /// <summary>
+    /// 마지막 경로 재계획 프레임
+    /// </summary>
+    public int LastReplanFrame { get; set; }
+
+    /// <summary>
+    /// 이전 프레임의 위치 (진행 추적용)
+    /// </summary>
+    public Vector2 PreviousPosition { get; set; }
+
     // Phase 1: Ground/Air Layer System
     /// <summary>
     /// 유닛의 이동 레이어 (Ground/Air)

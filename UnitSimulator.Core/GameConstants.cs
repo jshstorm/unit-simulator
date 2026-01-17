@@ -53,4 +53,36 @@ public static class GameConstants
     public const float AVOIDANCE_LATERAL_PADDING = 25f;
     public const float AVOIDANCE_PARALLEL_DISTANCE_MULTIPLIER = 1.5f;
     public const float AVOIDANCE_WAYPOINT_THRESHOLD = 12f;
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Phase 1: Static Obstacle Settings
+    // ════════════════════════════════════════════════════════════════════════
+    public const float TOWER_COLLISION_PADDING = 10f;
+    public const float RIVER_OBSTACLE_MARGIN = 5f;
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Phase 2: Replan Trigger Settings
+    // ════════════════════════════════════════════════════════════════════════
+    public const int REPLAN_STALL_THRESHOLD = 30;           // ~1 second at 30fps
+    public const int REPLAN_AVOIDANCE_THRESHOLD = 60;       // ~2 seconds continuous avoidance
+    public const int REPLAN_PERIODIC_INTERVAL = 300;        // ~10 seconds for long paths
+    public const float WAYPOINT_PROGRESS_THRESHOLD = 5f;    // Min movement to count as progress
+    public const int REPLAN_COOLDOWN_FRAMES = 15;           // Cooldown between replans
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Phase 3: Dynamic Obstacle Settings
+    // ════════════════════════════════════════════════════════════════════════
+    public const int DYNAMIC_OBSTACLE_DENSITY_THRESHOLD = 3;    // Units per cell to block
+    public const int DYNAMIC_OBSTACLE_UPDATE_INTERVAL = 15;     // Frames between updates
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Phase 4: Path Smoothing Settings
+    // ════════════════════════════════════════════════════════════════════════
+    public const bool PATH_SMOOTHING_ENABLED = true;
+    public const int PATH_SMOOTHING_MAX_SKIP = 10;              // Max waypoints to try skipping
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Phase 5: Debug Settings
+    // ════════════════════════════════════════════════════════════════════════
+    public const bool PATHFINDING_DEBUG_ENABLED = false;
 }

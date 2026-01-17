@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Linq;
+using UnitSimulator.Core.Pathfinding;
 
 namespace UnitSimulator;
 
@@ -292,12 +293,18 @@ public class SquadBehavior
     private void MoveUnit(SimulatorCore sim, Unit unit, Vector2 destination, List<Unit> friendlies, List<Unit>? enemies)
     {
         var adjustedDestination = sim.TerrainSystem.GetAdjustedDestination(unit, destination);
-        bool needsNewPath = Vector2.Distance(unit.CurrentDestination, adjustedDestination) > GameConstants.DESTINATION_THRESHOLD;
+
+        // 경로 재계획 필요 여부 확인 (목적지 변경 또는 재계획 트리거)
+        bool destinationChanged = Vector2.Distance(unit.CurrentDestination, adjustedDestination) > GameConstants.DESTINATION_THRESHOLD;
+        bool shouldReplan = PathProgressMonitor.ShouldReplan(unit, sim.CurrentFrame);
+        bool needsNewPath = destinationChanged || shouldReplan;
+
         if (needsNewPath)
         {
             var path = sim.Pathfinder?.FindPath(unit.Position, adjustedDestination);
             unit.SetMovementPath(path);
             unit.CurrentDestination = adjustedDestination;
+            PathProgressMonitor.OnReplan(unit, sim.CurrentFrame);
         }
 
         if (unit.TryGetNextMovementWaypoint(out var waypoint))
@@ -305,8 +312,8 @@ public class SquadBehavior
             Vector2 desiredDirection = waypoint - unit.Position;
             Vector2 desiredForward = MathUtils.SafeNormalize(desiredDirection);
             Vector2 separationVector = MathUtils.CalculateSeparationVector(unit, friendlies, GameConstants.FRIENDLY_SEPARATION_RADIUS);
-            
-            var avoidanceCandidates = enemies != null 
+
+            var avoidanceCandidates = enemies != null
                 ? enemies.Cast<Unit>().Concat(friendlies.Where(u => u != unit)).ToList()
                 : friendlies.Where(u => u != unit).ToList();
 
@@ -329,12 +336,18 @@ public class SquadBehavior
             Vector2 finalDir = MathUtils.SafeNormalize(steeringDir + separationVector + avoidance);
             // Phase 2: 유효 속도 사용 (돌진 중이면 돌진 속도 적용)
             unit.Velocity = finalDir * unit.GetEffectiveSpeed();
+
+            // 경로 진행 상태 업데이트
+            bool madeProgress = PathProgressMonitor.CheckProgress(unit, waypoint);
+            PathProgressMonitor.UpdateProgress(unit, hasDetour, madeProgress);
         }
         else
         {
             unit.Velocity = Vector2.Zero;
+            // 정지 상태에서도 진행 추적 리셋
+            PathProgressMonitor.UpdateProgress(unit, false, true);
         }
-        
+
         unit.Position += unit.Velocity;
         unit.UpdateRotation();
     }

@@ -2,6 +2,8 @@ using System.Numerics;
 using System.Linq;
 using UnitSimulator.Core.Contracts;
 using UnitSimulator.Core.Pathfinding;
+using UnitSimulator.Core.Terrain;
+using UnitSimulator.Core.Towers;
 
 namespace UnitSimulator;
 
@@ -53,6 +55,8 @@ public class SimulatorCore
     // Pathfinding System
     private PathfindingGrid? _pathfindingGrid;
     private AStarPathfinder? _pathfinder;
+    private DynamicObstacleSystem? _dynamicObstacleSystem;
+    private PathSmoother? _pathSmoother;
 
     /// <summary>
     /// Command queue for external control of the simulation.
@@ -270,10 +274,15 @@ public class SimulatorCore
         // Initialize Pathfinding
         _pathfindingGrid = new PathfindingGrid(GameConstants.SIMULATION_WIDTH, GameConstants.SIMULATION_HEIGHT, GameConstants.UNIT_RADIUS);
         _pathfinder = new AStarPathfinder(_pathfindingGrid);
+        _pathSmoother = new PathSmoother(_pathfindingGrid);
+        _dynamicObstacleSystem = new DynamicObstacleSystem(_pathfindingGrid);
         Console.WriteLine("[SimulatorCore] Pathfinding grid initialized");
 
         // Initialize towers from setup
         _gameSession.InitializeTowers(setup.Towers);
+
+        // Configure static obstacles (river, towers) on pathfinding grid
+        ConfigureStaticObstacles();
 
         // Apply game time settings if provided
         if (setup.GameTime != null)
@@ -300,6 +309,25 @@ public class SimulatorCore
 
         _referenceManager = ReferenceManager.CreateWithDefaultHandlers();
         _referenceManager.LoadAll(referencePath, Console.WriteLine);
+    }
+
+    /// <summary>
+    /// 정적 장애물(강, 타워)을 PathfindingGrid에 적용합니다.
+    /// </summary>
+    private void ConfigureStaticObstacles()
+    {
+        if (_pathfindingGrid == null) return;
+
+        // 1. 지형 장애물 (강의 비-다리 영역)
+        var terrainProvider = new TerrainObstacleProvider();
+        _pathfindingGrid.ApplyObstacles(terrainProvider);
+
+        // 2. 타워 장애물 (모든 타워의 충돌 반경)
+        var allTowers = _gameSession.FriendlyTowers.Concat(_gameSession.EnemyTowers);
+        var towerProvider = new TowerObstacleProvider(allTowers);
+        _pathfindingGrid.ApplyObstacles(towerProvider);
+
+        Console.WriteLine($"[SimulatorCore] Static obstacles configured: terrain (3 river sections), towers ({_gameSession.FriendlyTowers.Count + _gameSession.EnemyTowers.Count})");
     }
 
     /// <summary>
@@ -440,6 +468,12 @@ public class SimulatorCore
 
         // Process queued commands first
         ProcessCommands(callbacks);
+
+        // Update dynamic obstacles (unit density-based blocking)
+        if (_currentFrame % GameConstants.DYNAMIC_OBSTACLE_UPDATE_INTERVAL == 0)
+        {
+            _dynamicObstacleSystem?.UpdateDynamicObstacles(GetAllLivingUnits());
+        }
 
         // ════════════════════════════════════════════════════════════════════════
         // Phase 1: Collect - 모든 유닛 틱, 이벤트 수집 (HP 변경 없음)
