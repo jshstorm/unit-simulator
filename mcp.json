@@ -9,6 +9,13 @@
         "/Users/storm/Documents/github/unit-simulator"
       ],
       "description": "프로젝트 파일 시스템 접근"
+    },
+    "game-asset-generator": {
+      "command": "node",
+      "args": [
+        "/Users/storm/Documents/github/unit-simulator/tools/game-asset-mcp/src/index.js"
+      ],
+      "description": "AI 게임 에셋 생성기 (2D 픽셀아트, 스프라이트)"
     }
   },
   "resources": {

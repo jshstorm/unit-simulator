@@ -38,6 +38,18 @@ const UNIT_ICON_PATHS: Record<string, string> = {
   lava_hound: '/assets/previews/units/lava_hound.svg',
 };
 
+// Tower asset paths - King uses fire tower, Princess uses stone tower
+const TOWER_IMAGE_PATHS: Record<string, string> = {
+  king_1: '/assets/towers/fire/level1.png',
+  king_2: '/assets/towers/fire/level2.png',
+  king_3: '/assets/towers/fire/level3.png',
+  princess_1: '/assets/towers/stone/level1.png',
+  princess_2: '/assets/towers/stone/level2.png',
+  princess_3: '/assets/towers/stone/level3.png',
+  destroyed: '/assets/towers/destroyed/tower.png',
+  range_indicator: '/assets/towers/ui/range_dotted.png',
+};
+
 const getBaseScale = (width: number, height: number) =>
   Math.min(width / WORLD_WIDTH, height / WORLD_HEIGHT);
 
@@ -89,6 +101,7 @@ function SimulationCanvas({
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
   const unitIconMapRef = useRef(new Map<string, HTMLImageElement>());
+  const towerImageMapRef = useRef(new Map<string, HTMLImageElement>());
   const [iconVersion, setIconVersion] = useState(0);
   const isPanningRef = useRef(false);
   const lastPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -168,6 +181,20 @@ function SimulationCanvas({
       };
       img.src = src;
       map.set(unitId, img);
+    });
+  }, []);
+
+  // Load tower images
+  useEffect(() => {
+    const map = towerImageMapRef.current;
+    Object.entries(TOWER_IMAGE_PATHS).forEach(([key, src]) => {
+      if (map.has(key)) return;
+      const img = new Image();
+      img.onload = () => {
+        setIconVersion((prev) => prev + 1);
+      };
+      img.src = src;
+      map.set(key, img);
     });
   }, []);
 
@@ -552,44 +579,85 @@ function SimulationCanvas({
       const x = tower.position.x;
       const y = flipY(tower.position.y);
       const isKing = tower.type === 'King';
-      const size = isKing ? 80 : 60; // King towers are larger
+      const isDestroyed = tower.currentHP <= 0;
+      const size = isKing ? 120 : 100; // Larger size for image assets
       const halfSize = size / 2;
 
-      // Tower base color based on faction
-      const baseColor = tower.faction === 'Friendly' ? '#3b82f6' : '#ef4444';
-      const lightColor = tower.faction === 'Friendly' ? '#60a5fa' : '#f87171';
+      // Determine tower level based on HP percentage (for visual upgrade state)
+      const healthPercent = tower.currentHP / tower.maxHP;
+      const level = healthPercent > 0.66 ? 3 : healthPercent > 0.33 ? 2 : 1;
 
-      // Draw attack range (subtle)
-      if (tower.isActivated) {
+      // Get tower image key
+      const imageKey = isDestroyed
+        ? 'destroyed'
+        : isKing
+          ? `king_${level}`
+          : `princess_${level}`;
+      const towerImage = towerImageMapRef.current.get(imageKey);
+
+      // Draw attack range using range indicator image or fallback circle
+      if (tower.isActivated && !isDestroyed) {
+        const rangeImage = towerImageMapRef.current.get('range_indicator');
+        if (rangeImage && rangeImage.complete && rangeImage.naturalWidth > 0) {
+          const rangeSize = tower.attackRange * 2;
+          ctx.globalAlpha = tower.faction === 'Friendly' ? 0.4 : 0.3;
+          ctx.drawImage(rangeImage, x - rangeSize / 2, y - rangeSize / 2, rangeSize, rangeSize);
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.beginPath();
+          ctx.arc(x, y, tower.attackRange, 0, Math.PI * 2);
+          ctx.strokeStyle = tower.faction === 'Friendly' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+          ctx.lineWidth = 2 / (baseScale * zoom);
+          ctx.stroke();
+        }
+      }
+
+      // Draw tower image or fallback
+      if (towerImage && towerImage.complete && towerImage.naturalWidth > 0) {
+        // Apply tint for enemy towers (reddish overlay)
+        if (tower.faction === 'Enemy' && !isDestroyed) {
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.drawImage(towerImage, x - halfSize, y - halfSize, size, size);
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+          ctx.fillRect(x - halfSize, y - halfSize, size, size);
+          ctx.restore();
+        } else {
+          ctx.drawImage(towerImage, x - halfSize, y - halfSize, size, size);
+        }
+      } else {
+        // Fallback: draw colored rectangle with symbol
+        const baseColor = tower.faction === 'Friendly' ? '#3b82f6' : '#ef4444';
+        const lightColor = tower.faction === 'Friendly' ? '#60a5fa' : '#f87171';
         ctx.beginPath();
-        ctx.arc(x, y, tower.attackRange, 0, Math.PI * 2);
-        ctx.strokeStyle = tower.faction === 'Friendly' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-        ctx.lineWidth = 2 / (baseScale * zoom);
+        ctx.roundRect(x - halfSize, y - halfSize, size, size, 8);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+        ctx.strokeStyle = lightColor;
+        ctx.lineWidth = 3 / (baseScale * zoom);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${isKing ? 28 : 22}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(isKing ? '♔' : '♜', x, y);
+      }
+
+      // Draw faction indicator ring
+      if (!isDestroyed) {
+        ctx.beginPath();
+        ctx.arc(x, y + halfSize - 10, halfSize * 0.6, 0, Math.PI * 2);
+        ctx.strokeStyle = tower.faction === 'Friendly' ? '#3b82f6' : '#ef4444';
+        ctx.lineWidth = 4 / (baseScale * zoom);
         ctx.stroke();
       }
 
-      // Draw tower body (rounded rectangle)
-      ctx.beginPath();
-      const cornerRadius = 8;
-      ctx.roundRect(x - halfSize, y - halfSize, size, size, cornerRadius);
-      ctx.fillStyle = baseColor;
-      ctx.fill();
-      ctx.strokeStyle = lightColor;
-      ctx.lineWidth = 3 / (baseScale * zoom);
-      ctx.stroke();
-
-      // Draw tower icon/symbol
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${isKing ? 28 : 22}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(isKing ? '♔' : '♜', x, y);
-
       // Draw health bar
       const healthBarWidth = size;
-      const healthBarHeight = 8;
-      const healthBarY = y + halfSize + 8;
-      const healthPercent = tower.currentHP / tower.maxHP;
+      const healthBarHeight = 10;
+      const healthBarY = y + halfSize + 12;
 
       // Health bar background
       ctx.fillStyle = '#1f2937';
@@ -607,8 +675,9 @@ function SimulationCanvas({
 
       // Draw HP text
       ctx.fillStyle = '#ffffff';
-      ctx.font = `${10}px sans-serif`;
-      ctx.fillText(`${tower.currentHP}/${tower.maxHP}`, x, healthBarY + healthBarHeight + 12);
+      ctx.font = `bold ${12}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${tower.currentHP}/${tower.maxHP}`, x, healthBarY + healthBarHeight + 14);
     };
 
     // Draw all towers (friendly first, then enemy)
