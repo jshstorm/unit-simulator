@@ -12,3 +12,4 @@ xml_output/
 node_modules/
 gui-viewer/node_modules/
 gui-viewer/dist/
+sim-studio/dist/
