@@ -953,29 +953,29 @@ data/
 
 ### M2.2: 데이터 변환 파이프라인
 
+**상태**: ✅ 완료
+
 **담당**: 빌드/인프라
 
 **작업 내용**:
 
 ```
-npm run data:import   # (선택) Sheets/외부 → raw/
-npm run data:normalize # raw/ → processed/ (JSON 정규화)
-npm run data:validate # 스키마 검증 (processed/)
-npm run data:diff     # 변경사항 diff 출력
-npm run data:build    # normalize + validate + diff
+npm run data:normalize # references/ → processed/ (JSON 정규화)
+npm run data:validate  # 스키마 검증 (references/)
+npm run data:validate:processed # 스키마 검증 (processed/)
+npm run data:diff      # 변경사항 diff 출력
+npm run data:build     # normalize + validate + diff (전체 파이프라인)
 ```
 
 **파이프라인 구조**:
 
 ```mermaid
 flowchart LR
-  Sheets[Google Sheets (optional)] --> Import[Import / Normalize]
-  Raw[raw/ (optional)] --> Normalize
-  JSON[Repo JSON (processed)] --> Normalize
-  Import --> Raw
-  Normalize --> Validate
-  Validate --> Diff
-  Diff --> Processed[processed/*.json]
+  References[references/*.json] --> Normalize[normalize.js]
+  Normalize --> Processed[processed/*.json]
+  Processed --> Validate[ajv validate]
+  Validate --> Diff[diff.js]
+  Diff --> Output[Build Complete]
   Processed --> Core[UnitSimulator.Core]
   Processed --> Engines[Unity / Godot / Unreal]
   Processed --> Studio[Sim Studio]
@@ -988,17 +988,15 @@ flowchart LR
 **출력**: 자동화된 데이터 파이프라인
 
 **완료 조건**:
-- [ ] 단일 명령으로 전체 파이프라인 실행
-- [ ] 스키마 검증 실패 시 빌드 중단
-- [ ] 변환 결과 diff 출력 (변경사항 추적)
+- [x] 단일 명령으로 전체 파이프라인 실행 (`npm run data:build`)
+- [x] 스키마 검증 실패 시 빌드 중단 (build.js에서 exit 1)
+- [x] 변환 결과 diff 출력 (변경사항 추적)
 
-**현재 구현 범위**:
-- `package.json`에 `data:*` 스크립트가 존재하지만, 스키마/변환 파이프라인은 구성되지 않음
-- `data/processed/`에 `units.json`, `skills.json`이 존재하나 생성 규칙이 정의되지 않음
-
-**향후 작업 (문서 기준으로 필요하지만 미구현)**:
-- [ ] `data:normalize`, `data:validate`, `data:diff` 스크립트 실제 구현
-- [ ] 스키마 검증 실패 시 빌드 중단 규칙 추가
+**구현 결과**:
+- `scripts/normalize.js` - 데이터 정규화 스크립트
+- `scripts/diff.js` - 변경사항 비교 스크립트
+- `scripts/build.js` - 전체 파이프라인 실행 스크립트
+- `package.json` - npm 스크립트 추가 (data:normalize, data:diff, data:build, data:validate:processed)
 
 ---
 

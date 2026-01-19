@@ -11,10 +11,11 @@
 2. **[docs/INDEX.md](docs/INDEX.md)** - 모든 문서 인덱스 (단일 진실 원천)
 3. **[docs/development-milestone.md](docs/development-milestone.md)** - 현재 Phase 및 작업 현황
 
-### 현재 프로젝트 상태 (2026-01-13)
+### 현재 프로젝트 상태 (2026-01-19)
 - ✅ **Phase 1**: 코어 분리 완료 (100%)
 - ✅ **Phase 2.1**: 데이터 스키마 표준화 완료 (100%)
-- 🚧 **Phase 2.2**: 데이터 변환 파이프라인 (다음 단계)
+- ✅ **Phase 2.2**: 데이터 변환 파이프라인 완료 (100%)
+- 🚧 **Phase 2.3**: 런타임 데이터 로더 (다음 단계)
 - 📊 **Tests**: 73/73 passing (100%)
 - ✅ **Data Validation**: units, skills, towers validated
 
@@ -34,7 +35,8 @@ unit-simulator/
 
 ### 작업별 빠른 참조
 - **새 기능**: [development-milestone.md](docs/development-milestone.md) → 해당 Phase
-- **데이터 수정**: `npm run data:validate` 실행 후 커밋
+- **데이터 수정**: `npm run data:build` 실행 후 커밋 (normalize + validate + diff)
+- **데이터 검증만**: `npm run data:validate` (references 검증)
 - **코드 리뷰**: [AGENTS.md](AGENTS.md) → Reviewer 역할 확인
 - **문서 찾기**: [docs/INDEX.md](docs/INDEX.md)
 
