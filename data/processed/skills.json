@@ -18,8 +18,8 @@
     "type": "ChargeAttack",
     "triggerDistance": 150,
     "requiredChargeDistance": 100,
-    "damageMultiplier": 2.0,
-    "speedMultiplier": 2.0
+    "damageMultiplier": 2,
+    "speedMultiplier": 2
   },
   "baby_dragon_splash": {
     "type": "SplashDamage",
