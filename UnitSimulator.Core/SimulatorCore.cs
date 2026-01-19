@@ -49,6 +49,7 @@ public class SimulatorCore
     private readonly TerrainSystem _terrainSystem = new();
     private readonly UnitRegistry _unitRegistry = UnitRegistry.CreateWithDefaults();
     private ReferenceManager? _referenceManager;
+    private IDataProvider? _dataProvider;
     private bool _isInitialized = false;
     private bool _isRunning = false;
 
@@ -99,6 +100,11 @@ public class SimulatorCore
     /// 레퍼런스 매니저. JSON 파일에서 로드된 읽기 전용 데이터.
     /// </summary>
     public ReferenceManager? References => _referenceManager;
+
+    /// <summary>
+    /// 데이터 제공자. 유닛 스탯, 웨이브 정의, 게임 밸런스를 제공합니다.
+    /// </summary>
+    public IDataProvider? DataProvider => _dataProvider;
 
     /// <summary>
     /// Gets or sets the current wave number.
@@ -300,6 +306,62 @@ public class SimulatorCore
     }
 
     /// <summary>
+    /// IDataProvider를 사용하여 시뮬레이터를 초기화합니다.
+    /// </summary>
+    /// <param name="dataProvider">데이터 제공자</param>
+    /// <param name="setup">초기 설정 (null이면 클래시 로열 표준 사용)</param>
+    public void Initialize(IDataProvider dataProvider, InitialSetup? setup = null)
+    {
+        Console.WriteLine("[SimulatorCore] Initialize() with DataProvider called");
+
+        _dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+
+        // Use default setup if not provided
+        bool usingDefault = setup == null;
+        setup ??= InitialSetup.CreateClashRoyaleStandard();
+        Console.WriteLine($"[SimulatorCore] Using {(usingDefault ? "default ClashRoyale" : "custom")} InitialSetup");
+        Console.WriteLine($"[SimulatorCore] Setup contains {setup.Towers.Count} towers, {setup.InitialUnits.Count} initial units");
+
+        // Set main target on the right side of the simulation area
+        _mainTarget = new Vector2(GameConstants.SIMULATION_WIDTH - 100, GameConstants.SIMULATION_HEIGHT / 2);
+
+        // Initialize empty squads
+        _friendlySquad = new List<Unit>();
+        _enemySquad = new List<Unit>();
+
+        // Spawn initial units (empty in standard Clash Royale mode)
+        SpawnInitialUnitsWithDataProvider(setup.InitialUnits);
+        Console.WriteLine($"[SimulatorCore] Spawned {_friendlySquad.Count} friendly, {_enemySquad.Count} enemy initial units");
+
+        // Initialize Pathfinding
+        _pathfindingGrid = new PathfindingGrid(GameConstants.SIMULATION_WIDTH, GameConstants.SIMULATION_HEIGHT, GameConstants.UNIT_RADIUS);
+        _pathfinder = new AStarPathfinder(_pathfindingGrid);
+        _pathSmoother = new PathSmoother(_pathfindingGrid);
+        _dynamicObstacleSystem = new DynamicObstacleSystem(_pathfindingGrid);
+        Console.WriteLine("[SimulatorCore] Pathfinding grid initialized");
+
+        // Initialize towers from setup
+        _gameSession.InitializeTowers(setup.Towers);
+
+        // Configure static obstacles (river, towers) on pathfinding grid
+        ConfigureStaticObstacles();
+
+        // Apply game time settings if provided
+        if (setup.GameTime != null)
+        {
+            _gameSession.MaxGameTime = setup.GameTime.MaxGameTime;
+            Console.WriteLine($"[SimulatorCore] Game time set to {setup.GameTime.MaxGameTime}s");
+        }
+
+        _isInitialized = true;
+        _currentFrame = 0;
+        _currentWave = 0;
+        _hasMoreWaves = true;
+
+        Console.WriteLine($"[SimulatorCore] Initialization complete with DataProvider. Towers: {_gameSession.FriendlyTowers.Count}F/{_gameSession.EnemyTowers.Count}E");
+    }
+
+    /// <summary>
     /// 레퍼런스 데이터를 로드합니다.
     /// </summary>
     /// <param name="referencePath">레퍼런스 디렉토리 경로 (null이면 기본 경로)</param>
@@ -346,6 +408,59 @@ public class SimulatorCore
                 SpawnUnitFromSetup(setup.UnitId, setup.Faction, position, setup.HP);
             }
         }
+    }
+
+    /// <summary>
+    /// DataProvider를 사용하여 초기 유닛들을 스폰합니다.
+    /// </summary>
+    private void SpawnInitialUnitsWithDataProvider(List<UnitSpawnSetup> unitSetups)
+    {
+        foreach (var setup in unitSetups)
+        {
+            for (int i = 0; i < setup.Count; i++)
+            {
+                Vector2 position = setup.Count > 1
+                    ? CalculateSpreadPosition(setup.Position, setup.SpawnRadius, i, setup.Count)
+                    : setup.Position;
+
+                SpawnUnitFromDataProvider(setup.UnitId, setup.Faction, position, setup.HP);
+            }
+        }
+    }
+
+    /// <summary>
+    /// DataProvider를 사용하여 유닛을 생성합니다.
+    /// </summary>
+    private void SpawnUnitFromDataProvider(string unitId, UnitFaction faction, Vector2 position, int? hpOverride)
+    {
+        if (_dataProvider == null)
+        {
+            Console.WriteLine($"[SimulatorCore] Warning: DataProvider is null, cannot spawn {unitId}");
+            return;
+        }
+
+        int id = faction == UnitFaction.Friendly ? GetNextFriendlyId() : GetNextEnemyId();
+        var stats = _dataProvider.GetUnitStats(unitId);
+
+        var unit = new Unit(
+            position,
+            stats.Radius,
+            stats.MoveSpeed,
+            stats.TurnSpeed,
+            stats.Role,
+            hpOverride ?? stats.HP,
+            id,
+            faction,
+            stats.Layer,
+            stats.CanTarget,
+            stats.Damage,
+            abilities: null,  // TODO: Load abilities from skills
+            unitId: unitId,
+            targetPriority: stats.TargetPriority
+        );
+
+        var squad = faction == UnitFaction.Friendly ? _friendlySquad : _enemySquad;
+        squad.Add(unit);
     }
 
     /// <summary>

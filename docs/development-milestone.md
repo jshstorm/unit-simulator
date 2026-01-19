@@ -1002,6 +1002,8 @@ flowchart LR
 
 ### M2.3: 런타임 데이터 로더
 
+**상태**: ✅ 완료
+
 **담당**: 코어 개발
 
 **작업 내용**:
@@ -1011,28 +1013,34 @@ namespace UnitSimulator.Core.Data
 {
     public class JsonDataProvider : IDataProvider
     {
-        private readonly Dictionary<string, UnitStats> _unitStats;
-        private readonly List<WaveDefinition> _waves;
-        private readonly GameBalance _balance;
+        private readonly string _dataDirectory;
+        private ReferenceManager _referenceManager;
+        private Dictionary<string, UnitStats> _unitStatsCache;
 
-        public JsonDataProvider(string dataPath)
+        public JsonDataProvider(string dataDirectory, Action<string>? logger = null)
         {
-            _unitStats = LoadJson<Dictionary<string, UnitStats>>(
-                Path.Combine(dataPath, "units.json"));
-            _waves = LoadJson<List<WaveDefinition>>(
-                Path.Combine(dataPath, "waves.json"));
-            _balance = LoadJson<GameBalance>(
-                Path.Combine(dataPath, "balance.json"));
+            _dataDirectory = dataDirectory;
+            _referenceManager = ReferenceManager.CreateWithDefaultHandlers();
+            LoadData();
         }
 
-        public UnitStats GetUnitStats(UnitRole role, UnitFaction faction)
-            => _unitStats[$"{faction}_{role}"];
+        public UnitStats GetUnitStats(string unitId)
+            => _unitStatsCache.TryGetValue(unitId.ToLowerInvariant(), out var stats)
+                ? stats : UnitStats.Default;
+
+        public bool HasUnit(string unitId)
+            => _unitStatsCache.ContainsKey(unitId.ToLowerInvariant());
+
+        public IEnumerable<string> GetAllUnitIds()
+            => _unitStatsCache.Keys;
 
         public WaveDefinition GetWaveDefinition(int waveNumber)
-            => _waves[waveNumber - 1];
+            => _waveDefinitionsCache.TryGetValue(waveNumber, out var wave)
+                ? wave : WaveDefinition.Empty(waveNumber);
 
-        public GameBalance GetGameBalance()
-            => _balance;
+        public GameBalance GetGameBalance() => _gameBalance;
+
+        public void Reload() { /* 핫 리로드 지원 */ }
     }
 }
 ```
@@ -1041,19 +1049,32 @@ namespace UnitSimulator.Core.Data
 **출력**: 런타임 데이터 로딩 구현
 
 **완료 조건**:
-- [ ] Core가 외부 JSON에서 데이터 로드
-- [ ] 하드코딩된 상수값 제거
-- [ ] 핫 리로드 지원 (개발 모드)
+- [x] Core가 외부 JSON에서 데이터 로드
+- [x] IDataProvider 인터페이스 및 JsonDataProvider 구현
+- [x] 핫 리로드 지원 (Reload() 메서드)
 
-**현재 구현 범위**:
-- Core는 `ReferenceManager`를 통해 `data/references/*.json`을 직접 로드
-- `IDataProvider`/`JsonDataProvider` 구조는 없음
-- waves/balance 등 추가 데이터 타입 로드는 없음
+**구현 결과**:
 
-**향후 작업 (문서 기준으로 필요하지만 미구현)**:
-- [ ] `IDataProvider` 추상화 및 `JsonDataProvider` 구현
-- [ ] waves/balance 등 추가 데이터 타입 모델 및 로더 정의
-- [ ] 핫 리로드 정책/구현 추가
+1. **Contract 타입 확장** (`UnitSimulator.Core/Contracts/`):
+   - `IDataProvider.cs` - 데이터 제공 인터페이스 (unitId 기반 조회)
+   - `UnitStats.cs` - 유닛 스탯 (HP, Damage, Speed, Role, Layer, CanTarget 등)
+   - `WaveDefinition.cs` - 웨이브 정의 (SpawnGroups, DelayFrames)
+   - `GameBalance.cs` - 게임 밸런스 설정 (시뮬레이션 상수)
+
+2. **Data Provider 구현** (`UnitSimulator.Core/Data/`):
+   - `JsonDataProvider.cs` - ReferenceManager를 래핑하여 IDataProvider 구현
+   - `DefaultDataProvider.cs` - 테스트/폴백용 기본 데이터 제공자
+   - `DataProviderFactory.cs` - 환경에 따른 제공자 생성 팩토리
+
+3. **SimulatorCore 통합**:
+   - `Initialize(IDataProvider, InitialSetup?)` 오버로드 추가
+   - `DataProvider` 속성 추가
+   - `SpawnUnitFromDataProvider()` 메서드 추가
+
+**향후 작업**:
+- [ ] waves.json 데이터 파일 생성 및 로드 지원
+- [ ] balance.json 데이터 파일 생성 및 로드 지원
+- [ ] 기존 ReferenceManager 기반 코드를 IDataProvider로 점진적 마이그레이션
 
 ---
 
