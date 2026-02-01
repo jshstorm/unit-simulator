@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# 프로젝트 파일 복사 (restore 캐시 활용)
+COPY ReferenceModels/ReferenceModels.csproj ReferenceModels/
+COPY UnitSimulator.Core/UnitSimulator.Core.csproj UnitSimulator.Core/
+COPY UnitSimulator.Server/UnitSimulator.Server.csproj UnitSimulator.Server/
+RUN dotnet restore UnitSimulator.Server/UnitSimulator.Server.csproj
+
+# 소스 복사 + 빌드
+COPY ReferenceModels/ ReferenceModels/
+COPY UnitSimulator.Core/ UnitSimulator.Core/
+COPY UnitSimulator.Server/ UnitSimulator.Server/
+RUN dotnet publish UnitSimulator.Server/UnitSimulator.Server.csproj -c Release -o /app
+
+# 런타임
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app .
+COPY data/ /app/data/
+
+EXPOSE 5001
+ENTRYPOINT ["dotnet", "UnitSimulator.Server.dll", "--server", "--port", "5001"]

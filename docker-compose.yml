@@ -1,0 +1,22 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "5051:5001"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - BIND_HOST=+
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    ports:
+      - "3050:3000"
+    depends_on:
+      - server
+    restart: unless-stopped
