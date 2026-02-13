@@ -123,10 +123,10 @@ public class JsonDataProvider : IDataProvider
             return;
         }
 
-        foreach (var (id, unit) in unitsTable.GetAll())
+        foreach (var kvp in unitsTable.GetAllWithIds())
         {
-            var stats = ConvertToUnitStats(unit);
-            _unitStatsCache[id.ToLowerInvariant()] = stats;
+            var stats = ConvertToUnitStats(kvp.Value);
+            _unitStatsCache[kvp.Key.ToLowerInvariant()] = stats;
         }
 
         _logger?.Invoke($"[JsonDataProvider] Built {_unitStatsCache.Count} unit stats");
@@ -164,7 +164,7 @@ public class JsonDataProvider : IDataProvider
             return;
         }
 
-        foreach (var (id, wave) in wavesTable.GetAll())
+        foreach (var wave in wavesTable.GetAll())
         {
             var waveDef = ConvertToWaveDefinition(wave);
             _waveDefinitionsCache[wave.WaveNumber] = waveDef;
@@ -178,10 +178,8 @@ public class JsonDataProvider : IDataProvider
         var spawnGroups = wave.Spawns.Select(spawn => new WaveSpawnGroup
         {
             UnitId = spawn.UnitId,
-            PositionX = spawn.Position.X,
-            PositionY = spawn.Position.Y,
-            CustomHP = spawn.CustomHP,
-            CustomSpeed = spawn.CustomSpeed
+            SpawnX = spawn.Position.X,
+            SpawnY = spawn.Position.Y,
         }).ToList();
 
         return new WaveDefinition

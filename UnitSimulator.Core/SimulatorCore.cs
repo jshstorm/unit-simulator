@@ -236,7 +236,7 @@ public class SimulatorCore
     /// </summary>
     public void Initialize()
     {
-        Initialize(null, null);
+        Initialize((InitialSetup?)null, null);
     }
 
     /// <summary>
@@ -727,9 +727,9 @@ public class SimulatorCore
             if (state.HasChargeState)
             {
                 var chargeState = unit.EnsureChargeState();
-                unit.ChargeState.IsCharging = state.IsCharging;
-                unit.ChargeState.IsCharged = state.IsCharged;
-                unit.ChargeState.RequiredDistance = state.RequiredChargeDistance;
+                chargeState.IsCharging = state.IsCharging;
+                chargeState.IsCharged = state.IsCharged;
+                chargeState.RequiredDistance = state.RequiredChargeDistance;
             }
             unit.TakenSlotIndex = state.TakenSlotIndex;
             unit.HasAvoidanceTarget = state.HasAvoidanceTarget;
