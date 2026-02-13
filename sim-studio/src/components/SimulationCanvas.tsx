@@ -1,5 +1,11 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import { CameraFocusMode, FrameData, UnitStateData } from '../types';
+import { useCamera, WORLD_WIDTH, WORLD_HEIGHT } from '../hooks/useCamera';
+
+export interface SimulationCanvasHandle {
+  resetView: () => void;
+  resumeAutoFocus: () => void;
+}
 
 interface SimulationCanvasProps {
   frameData: FrameData | null;
@@ -8,19 +14,11 @@ interface SimulationCanvasProps {
   focusMode: CameraFocusMode;
   onUnitSelect: (unit: UnitStateData | null) => void;
   onCanvasClick: (x: number, y: number) => void;
+  onCameraStateChange?: (state: { zoomPercent: number; isManualMode: boolean }) => void;
 }
 
 const DEFAULT_CANVAS_WIDTH = 1200;
 const DEFAULT_CANVAS_HEIGHT = 800;
-const WORLD_WIDTH = 3200;  // Match GameConstants.SIMULATION_WIDTH
-const WORLD_HEIGHT = 5100; // Match GameConstants.SIMULATION_HEIGHT
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 3;
-const AUTO_FIT_PADDING = 60;
-const AUTO_FIT_MIN_SIZE = 200;
-const AUTO_FIT_COOLDOWN_MS = 5000; // Increased to 5 seconds to prevent jitter during manual zoom
-const CAMERA_PAN_SPEED = 1600;
-const CAMERA_ZOOM_SPEED = 1.5;
 
 const UNIT_ICON_PATHS: Record<string, string> = {
   skeleton: '/assets/previews/units/skeleton.svg',
@@ -38,7 +36,6 @@ const UNIT_ICON_PATHS: Record<string, string> = {
   lava_hound: '/assets/previews/units/lava_hound.svg',
 };
 
-// Tower asset paths - King uses fire tower, Princess uses stone tower
 const TOWER_IMAGE_PATHS: Record<string, string> = {
   king_1: '/assets/towers/fire/level1.png',
   king_2: '/assets/towers/fire/level2.png',
@@ -50,106 +47,48 @@ const TOWER_IMAGE_PATHS: Record<string, string> = {
   range_indicator: '/assets/towers/ui/range_dotted.png',
 };
 
-const getBaseScale = (width: number, height: number) =>
-  Math.min(width / WORLD_WIDTH, height / WORLD_HEIGHT);
-
-const getUnitsBounds = (units: UnitStateData[]) => {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  units.forEach((unit) => {
-    minX = Math.min(minX, unit.position.x - unit.radius);
-    minY = Math.min(minY, unit.position.y - unit.radius);
-    maxX = Math.max(maxX, unit.position.x + unit.radius);
-    maxY = Math.max(maxY, unit.position.y + unit.radius);
-  });
-
-  if (!Number.isFinite(minX)) {
-    return null;
-  }
-
-  return { minX, minY, maxX, maxY };
-};
-
-const moveTowards = (current: number, target: number, maxDelta: number) => {
-  const delta = target - current;
-  if (Math.abs(delta) <= maxDelta) return target;
-  return current + Math.sign(delta) * maxDelta;
-};
-
-function SimulationCanvas({
-  frameData,
-  selectedUnitId,
-  selectedFaction,
-  focusMode,
-  onUnitSelect,
-  onCanvasClick,
-}: SimulationCanvasProps) {
+const SimulationCanvas = forwardRef<SimulationCanvasHandle, SimulationCanvasProps>(function SimulationCanvas(
+  {
+    frameData,
+    selectedUnitId,
+    selectedFaction,
+    focusMode,
+    onUnitSelect,
+    onCanvasClick,
+    onCameraStateChange,
+  },
+  ref,
+) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({
     width: DEFAULT_CANVAS_WIDTH,
     height: DEFAULT_CANVAS_HEIGHT,
   });
-  const baseScale = getBaseScale(canvasSize.width, canvasSize.height);
-  const initialPanX = (canvasSize.width - WORLD_WIDTH * baseScale) / 2;
-  const initialPanY = (canvasSize.height - WORLD_HEIGHT * baseScale) / 2;
-  const [view, setView] = useState({ zoom: 1, panX: initialPanX, panY: initialPanY });
-  const viewRef = useRef(view);
-  const targetViewRef = useRef(view);
-  const animationFrameRef = useRef<number | null>(null);
-  const lastFrameTimeRef = useRef<number | null>(null);
   const unitIconMapRef = useRef(new Map<string, HTMLImageElement>());
   const towerImageMapRef = useRef(new Map<string, HTMLImageElement>());
   const [iconVersion, setIconVersion] = useState(0);
-  const isPanningRef = useRef(false);
-  const lastPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const prevCanvasSizeRef = useRef(canvasSize);
-  const lastManualInteractionRef = useRef(0);
-  const lastFocusKeyRef = useRef('none');
-  const autoFitAppliedSizeRef = useRef<{ width: number; height: number } | null>(null);
+  const didDragRef = useRef(false);
 
-  const updateView = useCallback((next: typeof view) => {
-    viewRef.current = next;
-    setView(next);
-  }, []);
+  const camera = useCamera({
+    canvasSize,
+    focusMode,
+    frameData,
+    selectedUnitId,
+    selectedFaction,
+  });
 
-  const animateToTarget = useCallback((time: number) => {
-    const lastTime = lastFrameTimeRef.current ?? time;
-    const deltaSeconds = Math.max(0, (time - lastTime) / 1000);
-    lastFrameTimeRef.current = time;
+  // Expose imperative methods
+  useImperativeHandle(ref, () => ({
+    resetView: camera.resetToFit,
+    resumeAutoFocus: camera.resumeAutoFocus,
+  }), [camera.resetToFit, camera.resumeAutoFocus]);
 
-    const current = viewRef.current;
-    const target = targetViewRef.current;
+  // Notify parent of camera state changes
+  useEffect(() => {
+    onCameraStateChange?.({ zoomPercent: camera.zoomPercent, isManualMode: camera.isManualMode });
+  }, [camera.zoomPercent, camera.isManualMode, onCameraStateChange]);
 
-    const nextPanX = moveTowards(current.panX, target.panX, CAMERA_PAN_SPEED * deltaSeconds);
-    const nextPanY = moveTowards(current.panY, target.panY, CAMERA_PAN_SPEED * deltaSeconds);
-    const nextZoom = moveTowards(current.zoom, target.zoom, CAMERA_ZOOM_SPEED * deltaSeconds);
-
-    const reached =
-      Math.abs(nextPanX - target.panX) < 0.5 &&
-      Math.abs(nextPanY - target.panY) < 0.5 &&
-      Math.abs(nextZoom - target.zoom) < 0.001;
-
-    updateView({ zoom: nextZoom, panX: nextPanX, panY: nextPanY });
-
-    if (reached) {
-      animationFrameRef.current = null;
-      lastFrameTimeRef.current = null;
-      return;
-    }
-
-    animationFrameRef.current = requestAnimationFrame(animateToTarget);
-  }, [updateView]);
-
-  const setTargetView = useCallback((next: typeof view) => {
-    targetViewRef.current = next;
-    if (animationFrameRef.current === null) {
-      animationFrameRef.current = requestAnimationFrame(animateToTarget);
-    }
-  }, [animateToTarget]);
-
+  // ResizeObserver
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -161,7 +100,7 @@ function SimulationCanvas({
       setCanvasSize((prev) =>
         prev.width === nextWidth && prev.height === nextHeight
           ? prev
-          : { width: nextWidth, height: nextHeight }
+          : { width: nextWidth, height: nextHeight },
       );
     };
 
@@ -171,14 +110,13 @@ function SimulationCanvas({
     return () => observer.disconnect();
   }, []);
 
+  // Load unit icons
   useEffect(() => {
     const map = unitIconMapRef.current;
     Object.entries(UNIT_ICON_PATHS).forEach(([unitId, src]) => {
       if (map.has(unitId)) return;
       const img = new Image();
-      img.onload = () => {
-        setIconVersion((prev) => prev + 1);
-      };
+      img.onload = () => setIconVersion((prev) => prev + 1);
       img.src = src;
       map.set(unitId, img);
     });
@@ -190,194 +128,21 @@ function SimulationCanvas({
     Object.entries(TOWER_IMAGE_PATHS).forEach(([key, src]) => {
       if (map.has(key)) return;
       const img = new Image();
-      img.onload = () => {
-        setIconVersion((prev) => prev + 1);
-      };
+      img.onload = () => setIconVersion((prev) => prev + 1);
       img.src = src;
       map.set(key, img);
     });
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
-
+  // Sync canvas element size
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
-  }, [canvasSize.height, canvasSize.width]);
+  }, [canvasSize.width, canvasSize.height]);
 
-  useEffect(() => {
-    if (!frameData) return;
-    if (canvasSize.width === 0 || canvasSize.height === 0) return;
-
-    const selectionKey =
-      selectedUnitId !== null && selectedFaction
-        ? `${selectedFaction}-${selectedUnitId}`
-        : 'none';
-    const focusKey = `${focusMode}-${selectionKey}`;
-    const selectionChanged = focusKey !== lastFocusKeyRef.current;
-    if (selectionChanged) {
-      lastFocusKeyRef.current = focusKey;
-    }
-
-    const now = Date.now();
-    if (!selectionChanged && now - lastManualInteractionRef.current < AUTO_FIT_COOLDOWN_MS) {
-      return;
-    }
-
-    const allUnits = [...frameData.friendlyUnits, ...frameData.enemyUnits];
-    const selectedUnit =
-      selectedUnitId !== null && selectedFaction
-        ? (selectedFaction === 'Friendly'
-            ? frameData.friendlyUnits
-            : frameData.enemyUnits
-          ).find((unit) => unit.id === selectedUnitId) ?? null
-        : null;
-
-    const livingFriendly = frameData.friendlyUnits.filter((unit) => !unit.isDead);
-    const livingEnemy = frameData.enemyUnits.filter((unit) => !unit.isDead);
-    const livingUnits = [...livingFriendly, ...livingEnemy];
-
-    let focusUnits: UnitStateData[] = [];
-    switch (focusMode) {
-      case 'selected':
-        focusUnits = selectedUnit ? [selectedUnit] : [];
-        break;
-      case 'friendly':
-        focusUnits = livingFriendly.length > 0 ? livingFriendly : frameData.friendlyUnits;
-        break;
-      case 'enemy':
-        focusUnits = livingEnemy.length > 0 ? livingEnemy : frameData.enemyUnits;
-        break;
-      case 'all-living':
-        focusUnits = livingUnits;
-        break;
-      case 'all':
-        focusUnits = allUnits;
-        break;
-      case 'auto':
-      default:
-        if (selectedUnit) {
-          focusUnits = [selectedUnit];
-        } else {
-          focusUnits = livingUnits.length > 0 ? livingUnits : allUnits;
-        }
-        break;
-    }
-
-    if (focusUnits.length === 0) {
-      focusUnits = allUnits;
-    }
-
-    const bounds = getUnitsBounds(focusUnits);
-    let minX = 0;
-    let minY = 0;
-    let maxX = WORLD_WIDTH;
-    let maxY = WORLD_HEIGHT;
-
-    if (bounds) {
-      minX = bounds.minX - AUTO_FIT_PADDING;
-      minY = bounds.minY - AUTO_FIT_PADDING;
-      maxX = bounds.maxX + AUTO_FIT_PADDING;
-      maxY = bounds.maxY + AUTO_FIT_PADDING;
-    }
-
-    let focusWidth = maxX - minX;
-    let focusHeight = maxY - minY;
-
-    if (focusWidth < AUTO_FIT_MIN_SIZE) {
-      const extra = (AUTO_FIT_MIN_SIZE - focusWidth) / 2;
-      minX -= extra;
-      maxX += extra;
-      focusWidth = AUTO_FIT_MIN_SIZE;
-    }
-
-    if (focusHeight < AUTO_FIT_MIN_SIZE) {
-      const extra = (AUTO_FIT_MIN_SIZE - focusHeight) / 2;
-      minY -= extra;
-      maxY += extra;
-      focusHeight = AUTO_FIT_MIN_SIZE;
-    }
-
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-
-    const desiredScale = Math.min(
-      canvasSize.width / focusWidth,
-      canvasSize.height / focusHeight
-    );
-    const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, desiredScale / baseScale));
-    const nextPanX = canvasSize.width / 2 - centerX * baseScale * nextZoom;
-    // Flip Y coordinate to match screen space (Y=0 at top)
-    const nextPanY = canvasSize.height / 2 - (WORLD_HEIGHT - centerY) * baseScale * nextZoom;
-
-    const { zoom, panX, panY } = targetViewRef.current;
-    const zoomDelta = Math.abs(zoom - nextZoom);
-    const panDelta = Math.abs(panX - nextPanX) + Math.abs(panY - nextPanY);
-
-    // Don't auto-fit if the deltas are very small (already at target)
-    if (zoomDelta < 0.001 && panDelta < 0.5) {
-      return;
-    }
-
-    // Don't auto-fit if user has manually zoomed/panned and the difference is significant
-    // This prevents jittering when user manually controls the view
-    const manuallyAdjusted = (zoomDelta > 0.05 || panDelta > 50) &&
-                            (now - lastManualInteractionRef.current < AUTO_FIT_COOLDOWN_MS);
-    if (manuallyAdjusted) {
-      return;
-    }
-
-    autoFitAppliedSizeRef.current = {
-      width: canvasSize.width,
-      height: canvasSize.height,
-    };
-    setTargetView({ zoom: nextZoom, panX: nextPanX, panY: nextPanY });
-  }, [
-    baseScale,
-    canvasSize.height,
-    canvasSize.width,
-    frameData,
-    focusMode,
-    selectedFaction,
-    selectedUnitId,
-    setTargetView,
-  ]);
-
-  useEffect(() => {
-    const prevSize = prevCanvasSizeRef.current;
-    if (prevSize.width === canvasSize.width && prevSize.height === canvasSize.height) {
-      return;
-    }
-
-    const autoFitSize = autoFitAppliedSizeRef.current;
-    if (
-      autoFitSize &&
-      autoFitSize.width === canvasSize.width &&
-      autoFitSize.height === canvasSize.height
-    ) {
-      prevCanvasSizeRef.current = canvasSize;
-      return;
-    }
-
-    const { zoom, panX, panY } = targetViewRef.current;
-    const prevBaseScale = getBaseScale(prevSize.width, prevSize.height);
-    const worldCenterX = (prevSize.width / 2 - panX) / (prevBaseScale * zoom);
-    const worldCenterY = (prevSize.height / 2 - panY) / (prevBaseScale * zoom);
-    const nextPanX = canvasSize.width / 2 - worldCenterX * baseScale * zoom;
-    const nextPanY = canvasSize.height / 2 - worldCenterY * baseScale * zoom;
-
-    prevCanvasSizeRef.current = canvasSize;
-    setTargetView({ zoom, panX: nextPanX, panY: nextPanY });
-  }, [baseScale, canvasSize, setTargetView]);
-
+  // --- Canvas pixel coords from client coords ---
   const getCanvasPixelCoords = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -392,38 +157,29 @@ function SimulationCanvas({
     };
   }, []);
 
-  const canvasToWorld = useCallback((canvasX: number, canvasY: number) => {
-    const { zoom, panX, panY } = viewRef.current;
-    const screenY = (canvasY - panY) / (baseScale * zoom);
-    return {
-      x: (canvasX - panX) / (baseScale * zoom),
-      y: WORLD_HEIGHT - screenY,  // Flip Y back to game coordinates
-    };
-  }, [baseScale]);
-
   const getWorldCoordinates = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const { x, y } = getCanvasPixelCoords(e.clientX, e.clientY);
-    return canvasToWorld(x, y);
-  }, [canvasToWorld, getCanvasPixelCoords]);
+    return camera.canvasToWorld(x, y);
+  }, [camera.canvasToWorld, getCanvasPixelCoords]);
 
+  // --- Unit hit-testing ---
   const findUnitAtPosition = useCallback((x: number, y: number): UnitStateData | null => {
     if (!frameData) return null;
 
     const allUnits = [...frameData.friendlyUnits, ...frameData.enemyUnits];
-    
     for (const unit of allUnits) {
       const distance = Math.sqrt(
-        Math.pow(unit.position.x - x, 2) + Math.pow(unit.position.y - y, 2)
+        Math.pow(unit.position.x - x, 2) + Math.pow(unit.position.y - y, 2),
       );
-      if (distance <= unit.radius + 5) {
-        return unit;
-      }
+      if (distance <= unit.radius + 5) return unit;
     }
-    
     return null;
   }, [frameData]);
 
+  // --- Click handler (skip if dragged) ---
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (didDragRef.current) return;
+
     const { x, y } = getWorldCoordinates(e);
     const unit = findUnitAtPosition(x, y);
 
@@ -434,60 +190,39 @@ function SimulationCanvas({
     }
   }, [getWorldCoordinates, findUnitAtPosition, selectedUnitId, onUnitSelect, onCanvasClick]);
 
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const { x: canvasX, y: canvasY } = getCanvasPixelCoords(e.clientX, e.clientY);
-    const { zoom } = viewRef.current;
-    lastManualInteractionRef.current = Date.now();
-
-    const worldPos = canvasToWorld(canvasX, canvasY);
-
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * zoomFactor));
-
-    const newPanX = canvasX - worldPos.x * baseScale * newZoom;
-    // Use flipped Y for screen position calculation
-    const newPanY = canvasY - (WORLD_HEIGHT - worldPos.y) * baseScale * newZoom;
-
-    setTargetView({ zoom: newZoom, panX: newPanX, panY: newPanY });
-  }, [baseScale, canvasToWorld, getCanvasPixelCoords, setTargetView]);
-
-  // Attach wheel event listener with { passive: false } to allow preventDefault
+  // --- Wheel (passive: false) ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      canvas.removeEventListener('wheel', handleWheel);
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const { x, y } = getCanvasPixelCoords(e.clientX, e.clientY);
+      camera.handleWheelZoom(x, y, e.deltaY);
     };
-  }, [handleWheel]);
 
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', onWheel);
+  }, [camera.handleWheelZoom, getCanvasPixelCoords]);
+
+  // --- Mouse pan handlers ---
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    isPanningRef.current = true;
-    lastPosRef.current = getCanvasPixelCoords(e.clientX, e.clientY);
-  }, [getCanvasPixelCoords]);
+    didDragRef.current = false;
+    const pos = getCanvasPixelCoords(e.clientX, e.clientY);
+    camera.handlePanStart(pos.x, pos.y);
+  }, [camera.handlePanStart, getCanvasPixelCoords]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isPanningRef.current) return;
     const pos = getCanvasPixelCoords(e.clientX, e.clientY);
-    const last = lastPosRef.current;
-    const dx = pos.x - last.x;
-    const dy = pos.y - last.y;
-
-    lastPosRef.current = pos;
-
-    const { zoom, panX, panY } = viewRef.current;
-    if (dx !== 0 || dy !== 0) {
-      lastManualInteractionRef.current = Date.now();
-    }
-    setTargetView({ zoom, panX: panX + dx, panY: panY + dy });
-  }, [getCanvasPixelCoords, setTargetView]);
+    const dragging = camera.handlePanMove(pos.x, pos.y);
+    if (dragging) didDragRef.current = true;
+  }, [camera.handlePanMove, getCanvasPixelCoords]);
 
   const handleMouseUpOrLeave = useCallback(() => {
-    isPanningRef.current = false;
-  }, []);
+    camera.handlePanEnd();
+  }, [camera.handlePanEnd]);
 
+  // --- Rendering ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -495,7 +230,6 @@ function SimulationCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#0f0f23';
     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
@@ -507,25 +241,23 @@ function SimulationCanvas({
       ctx.fillText(
         'Waiting for simulation data...',
         canvasSize.width / 2,
-        canvasSize.height / 2
+        canvasSize.height / 2,
       );
       return;
     }
 
-    const { zoom, panX, panY } = view;
+    const { zoom, panX, panY } = camera.view;
+    const { baseScale } = camera;
 
-    // Apply pan/zoom (world space -> canvas)
     ctx.translate(panX, panY);
     ctx.scale(baseScale * zoom, baseScale * zoom);
 
-    // Helper to flip Y coordinate (game Y=0 is bottom, screen Y=0 is top)
     const flipY = (y: number) => WORLD_HEIGHT - y;
 
-    // Draw grid
+    // Grid
     ctx.strokeStyle = '#1f2937';
     ctx.lineWidth = 1 / (baseScale * zoom);
 
-    // Determine visible world bounds for grid tiling
     const invScale = 1 / (baseScale * zoom);
     const minWorldX = -panX * invScale;
     const minWorldY = -panY * invScale;
@@ -555,7 +287,7 @@ function SimulationCanvas({
     ctx.lineWidth = 2 / (baseScale * zoom);
     ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-    // Draw main target
+    // Main target
     const targetX = frameData.mainTarget.x;
     const targetY = flipY(frameData.mainTarget.y);
     ctx.beginPath();
@@ -566,7 +298,6 @@ function SimulationCanvas({
     ctx.lineWidth = 2 / (baseScale * zoom);
     ctx.stroke();
 
-    // Draw target cross
     ctx.beginPath();
     ctx.moveTo(targetX - 10, targetY);
     ctx.lineTo(targetX + 10, targetY);
@@ -580,14 +311,12 @@ function SimulationCanvas({
       const y = flipY(tower.position.y);
       const isKing = tower.type === 'King';
       const isDestroyed = tower.currentHP <= 0;
-      const size = isKing ? 120 : 100; // Larger size for image assets
+      const size = isKing ? 120 : 100;
       const halfSize = size / 2;
 
-      // Determine tower level based on HP percentage (for visual upgrade state)
       const healthPercent = tower.currentHP / tower.maxHP;
       const level = healthPercent > 0.66 ? 3 : healthPercent > 0.33 ? 2 : 1;
 
-      // Get tower image key
       const imageKey = isDestroyed
         ? 'destroyed'
         : isKing
@@ -595,7 +324,6 @@ function SimulationCanvas({
           : `princess_${level}`;
       const towerImage = towerImageMapRef.current.get(imageKey);
 
-      // Draw attack range using range indicator image or fallback circle
       if (tower.isActivated && !isDestroyed) {
         const rangeImage = towerImageMapRef.current.get('range_indicator');
         if (rangeImage && rangeImage.complete && rangeImage.naturalWidth > 0) {
@@ -612,9 +340,7 @@ function SimulationCanvas({
         }
       }
 
-      // Draw tower image or fallback
       if (towerImage && towerImage.complete && towerImage.naturalWidth > 0) {
-        // Apply tint for enemy towers (reddish overlay)
         if (tower.faction === 'Enemy' && !isDestroyed) {
           ctx.save();
           ctx.globalAlpha = 0.85;
@@ -627,7 +353,6 @@ function SimulationCanvas({
           ctx.drawImage(towerImage, x - halfSize, y - halfSize, size, size);
         }
       } else {
-        // Fallback: draw colored rectangle with symbol
         const baseColor = tower.faction === 'Friendly' ? '#3b82f6' : '#ef4444';
         const lightColor = tower.faction === 'Friendly' ? '#60a5fa' : '#f87171';
         ctx.beginPath();
@@ -642,10 +367,9 @@ function SimulationCanvas({
         ctx.font = `bold ${isKing ? 28 : 22}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(isKing ? '♔' : '♜', x, y);
+        ctx.fillText(isKing ? '\u2654' : '\u265C', x, y);
       }
 
-      // Draw faction indicator ring
       if (!isDestroyed) {
         ctx.beginPath();
         ctx.arc(x, y + halfSize - 10, halfSize * 0.6, 0, Math.PI * 2);
@@ -654,52 +378,44 @@ function SimulationCanvas({
         ctx.stroke();
       }
 
-      // Draw health bar
       const healthBarWidth = size;
       const healthBarHeight = 10;
       const healthBarY = y + halfSize + 12;
 
-      // Health bar background
       ctx.fillStyle = '#1f2937';
       ctx.fillRect(x - healthBarWidth / 2, healthBarY, healthBarWidth, healthBarHeight);
 
-      // Health bar fill
       const healthColor = healthPercent > 0.5 ? '#22c55e' : healthPercent > 0.25 ? '#eab308' : '#ef4444';
       ctx.fillStyle = healthColor;
       ctx.fillRect(x - healthBarWidth / 2, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
 
-      // Health bar border
       ctx.strokeStyle = '#374151';
       ctx.lineWidth = 1 / (baseScale * zoom);
       ctx.strokeRect(x - healthBarWidth / 2, healthBarY, healthBarWidth, healthBarHeight);
 
-      // Draw HP text
       ctx.fillStyle = '#ffffff';
       ctx.font = `bold ${12}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(`${tower.currentHP}/${tower.maxHP}`, x, healthBarY + healthBarHeight + 14);
     };
 
-    // Draw all towers (friendly first, then enemy)
     frameData.friendlyTowers?.forEach(drawTower);
     frameData.enemyTowers?.forEach(drawTower);
 
     // Draw units
-    const MIN_DISPLAY_RADIUS = 20; // Minimum radius for visibility
+    const MIN_DISPLAY_RADIUS = 20;
     const drawUnit = (unit: UnitStateData) => {
       const x = unit.position.x;
       const y = flipY(unit.position.y);
-      const radius = Math.max(unit.radius, MIN_DISPLAY_RADIUS); // Ensure minimum size
+      const radius = Math.max(unit.radius, MIN_DISPLAY_RADIUS);
       const isSelected = unit.id === selectedUnitId && unit.faction === selectedFaction;
 
-      if (unit.isDead) {
-        ctx.globalAlpha = 0.3;
-      }
+      if (unit.isDead) ctx.globalAlpha = 0.3;
 
       if (isSelected) {
         ctx.beginPath();
         ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fbbf24'; // Yellow selection ring
+        ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 4 / (baseScale * zoom);
         ctx.stroke();
       }
@@ -722,44 +438,39 @@ function SimulationCanvas({
         ctx.drawImage(icon, 0, 0, size, size);
         ctx.restore();
       } else {
-        // Draw unit circle with bright colors
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         if (unit.faction === 'Friendly') {
-          ctx.fillStyle = unit.role === 'Melee' ? '#4ade80' : '#60a5fa'; // Brighter green/blue
+          ctx.fillStyle = unit.role === 'Melee' ? '#4ade80' : '#60a5fa';
         } else {
-          ctx.fillStyle = unit.role === 'Melee' ? '#f87171' : '#fb923c'; // Brighter red/orange
+          ctx.fillStyle = unit.role === 'Melee' ? '#f87171' : '#fb923c';
         }
         ctx.fill();
 
-        // White outline for better visibility
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3 / (baseScale * zoom);
         ctx.stroke();
       }
 
-      // Direction indicator (flip forward.y for correct direction)
       if (!unit.isDead) {
         const fwdLength = radius + 10;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(
           x + unit.forward.x * fwdLength,
-          y - unit.forward.y * fwdLength  // Negate Y because we flipped the coordinate system
+          y - unit.forward.y * fwdLength,
         );
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3 / (baseScale * zoom);
         ctx.stroke();
       }
 
-      // Unit label
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(unit.label, x, y);
 
-      // Health bar
       const healthBarWidth = radius * 2.5;
       const healthBarHeight = 6;
       const healthBarY = y - radius - 12;
@@ -779,10 +490,7 @@ function SimulationCanvas({
         ctx.beginPath();
         ctx.setLineDash([5, 5]);
         ctx.moveTo(x, y);
-        ctx.lineTo(
-          unit.currentDestination.x,
-          unit.currentDestination.y
-        );
+        ctx.lineTo(unit.currentDestination.x, unit.currentDestination.y);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.lineWidth = 1 / (baseScale * zoom);
         ctx.stroke();
@@ -794,7 +502,7 @@ function SimulationCanvas({
 
     frameData.enemyUnits.forEach(drawUnit);
     frameData.friendlyUnits.forEach(drawUnit);
-  }, [baseScale, canvasSize.height, canvasSize.width, frameData, iconVersion, selectedUnitId, selectedFaction, view]);
+  }, [camera.baseScale, camera.view, canvasSize.height, canvasSize.width, frameData, iconVersion, selectedUnitId, selectedFaction]);
 
   return (
     <canvas
@@ -807,9 +515,9 @@ function SimulationCanvas({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUpOrLeave}
       onMouseLeave={handleMouseUpOrLeave}
-      style={{ cursor: isPanningRef.current ? 'grabbing' : 'grab' }}
+      style={{ cursor: didDragRef.current ? 'grabbing' : 'grab' }}
     />
   );
-}
+});
 
 export default SimulationCanvas;

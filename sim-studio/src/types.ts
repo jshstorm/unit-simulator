@@ -80,6 +80,7 @@ export type SessionRole = 'owner' | 'viewer';
 
 export type CameraFocusMode =
   | 'auto'
+  | 'manual'
   | 'selected'
   | 'all-living'
   | 'friendly'

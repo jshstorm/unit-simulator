@@ -822,6 +822,50 @@ button {
   background: #164b8a;
 }
 
+/* Camera Overlay */
+.camera-overlay {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.camera-overlay-zoom {
+  background: rgba(15, 15, 35, 0.75);
+  border: 1px solid #0f3460;
+  color: #9ca3af;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  cursor: pointer;
+  min-width: 48px;
+  text-align: center;
+}
+
+.camera-overlay-zoom:hover {
+  color: #eaeaea;
+  border-color: #e94560;
+}
+
+.camera-overlay-resume {
+  background: rgba(233, 69, 96, 0.2);
+  border: 1px solid #e94560;
+  color: #e94560;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.camera-overlay-resume:hover {
+  background: rgba(233, 69, 96, 0.4);
+}
+
 /* Spreadsheet View Styles */
 .data-editor-spreadsheet {
   display: flex;

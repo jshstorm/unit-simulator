@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CameraFocusMode, Command, UnitStateData } from './types';
 import { useWebSocket } from './hooks/useWebSocket';
 import { downloadFrameLog } from './utils/frameLogDownload';
-import SimulationCanvas from './components/SimulationCanvas';
+import SimulationCanvas, { SimulationCanvasHandle } from './components/SimulationCanvas';
 import UnitStateViewer from './components/UnitStateViewer';
 import CommandPanel from './components/CommandPanel';
 import SimulationControls from './components/SimulationControls';
@@ -10,6 +10,7 @@ import SessionSelector from './components/SessionSelector';
 import DataEditor from './components/DataEditor';
 import ResizablePanel from './components/ResizablePanel';
 import VerticalResizablePanel from './components/VerticalResizablePanel';
+import CameraOverlay from './components/CameraOverlay';
 
 const API_BASE_URL = 'http://localhost:5001';
 const WS_BASE_URL = 'ws://localhost:5001/ws';
@@ -25,6 +26,8 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [seekFrameInput, setSeekFrameInput] = useState<string>('0');
   const [focusMode, setFocusMode] = useState<CameraFocusMode>('auto');
+  const canvasRef = useRef<SimulationCanvasHandle>(null);
+  const [cameraState, setCameraState] = useState({ zoomPercent: 100, isManualMode: false });
 
   const {
     frameData,
@@ -137,6 +140,10 @@ function App() {
   const handleDownloadFrameLog = useCallback(() => {
     downloadFrameLog(frameLog);
   }, [frameLog]);
+
+  const handleCameraStateChange = useCallback((state: { zoomPercent: number; isManualMode: boolean }) => {
+    setCameraState(state);
+  }, []);
 
   // Keyboard shortcuts for step/step back
   useEffect(() => {
@@ -300,23 +307,36 @@ function App() {
                       )}
                     </div>
 
-                    <SimulationCanvas
-                      frameData={frameData}
-                      selectedUnitId={selectedUnitId}
-                      selectedFaction={selectedFaction}
-                      focusMode={focusMode}
-                      onUnitSelect={handleUnitSelect}
-                      onCanvasClick={(x, y) => {
-                        if (selectedUnit && !selectedUnit.isDead && canControl) {
-                          handleSendCommand({
-                            type: 'move',
-                            unitId: selectedUnit.id,
-                            faction: selectedUnit.faction,
-                            position: { x, y },
-                          });
-                        }
-                      }}
-                    />
+                    <div style={{ position: 'relative', display: 'flex', flex: 1, minHeight: 0 }}>
+                      <SimulationCanvas
+                        ref={canvasRef}
+                        frameData={frameData}
+                        selectedUnitId={selectedUnitId}
+                        selectedFaction={selectedFaction}
+                        focusMode={focusMode}
+                        onUnitSelect={handleUnitSelect}
+                        onCanvasClick={(x, y) => {
+                          if (selectedUnit && !selectedUnit.isDead && canControl) {
+                            handleSendCommand({
+                              type: 'move',
+                              unitId: selectedUnit.id,
+                              faction: selectedUnit.faction,
+                              position: { x, y },
+                            });
+                          }
+                        }}
+                        onCameraStateChange={handleCameraStateChange}
+                      />
+                      <CameraOverlay
+                        zoomPercent={cameraState.zoomPercent}
+                        isManualMode={cameraState.isManualMode}
+                        onResetView={() => canvasRef.current?.resetView()}
+                        onResumeAuto={() => {
+                          canvasRef.current?.resumeAutoFocus();
+                          if (focusMode === 'manual') setFocusMode('auto');
+                        }}
+                      />
+                    </div>
                   </>
                 }
                 bottomPanel={

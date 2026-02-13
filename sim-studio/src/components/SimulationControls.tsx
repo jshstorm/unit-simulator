@@ -91,6 +91,7 @@ function SimulationControls({
             disabled={!isConnected}
           >
             <option value="auto">Auto (Selected &gt; Living)</option>
+            <option value="manual">Manual (Free Camera)</option>
             <option value="selected">Selected Only</option>
             <option value="all-living">All Living</option>
             <option value="friendly">Friendly</option>
