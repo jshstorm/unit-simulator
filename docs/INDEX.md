@@ -53,6 +53,13 @@
 | [session-logging.md](session-logging.md) | WebSocket 세션 로깅 | ✅ 최신 |
 | [multi-session-spec.md](multi-session-spec.md) | 멀티 세션 스펙 | ✅ 최신 |
 
+### UE5 포팅 & 게임 피쳐
+
+| 문서 | 설명 | 상태 |
+|------|------|------|
+| [tasks/cpp-porting-plan.md](tasks/cpp-porting-plan.md) | C# → C++ (UE5) 코어 포팅 계획 | 🚧 진행 |
+| [tasks/game-feature-backlog.md](tasks/game-feature-backlog.md) | 게임 피쳐 백로그 (홈베이스, 월드맵, 전투) | 📋 보류 |
+
 ### 작업 요약 (완료된 작업들)
 
 | 문서 | 설명 | 상태 |

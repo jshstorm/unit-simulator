@@ -1,0 +1,20 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "UnitSimCore",
+	"Description": "Core simulation logic for Unit Simulator, ported from C#",
+	"Category": "Gameplay",
+	"CreatedBy": "UnitSimulator Team",
+	"EnabledByDefault": true,
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "UnitSimCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
