@@ -82,11 +82,11 @@ enum class EAttackType : uint8
 	None
 };
 
-/** Status effect type (flags) */
+/** Status effect type (flags) - uses int32 bitmask since values exceed uint8 range */
 UENUM(BlueprintType, Meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
-enum class EStatusEffectType : uint16
+enum class EStatusEffectType : uint8
 {
-	None         = 0         UMETA(Hidden),
+	None         = 0        UMETA(Hidden),
 	Stunned      = 1 << 0,
 	Frozen       = 1 << 1,
 	Slowed       = 1 << 2,
@@ -94,13 +94,18 @@ enum class EStatusEffectType : uint16
 	Poisoned     = 1 << 4,
 	Burning      = 1 << 5,
 	Raged        = 1 << 6,
-	Healing      = 1 << 7,
-	Shielded     = 1 << 8,
-	Invisible    = 1 << 9,
-	Marked       = 1 << 10,
-	Invulnerable = 1 << 11
+	Healing      = 1 << 7
 };
 ENUM_CLASS_FLAGS(EStatusEffectType);
+
+/** Extended status effects beyond uint8 range - stored as int32 bitmask */
+namespace EStatusEffectEx
+{
+	constexpr int32 Shielded     = 1 << 8;
+	constexpr int32 Invisible    = 1 << 9;
+	constexpr int32 Marked       = 1 << 10;
+	constexpr int32 Invulnerable = 1 << 11;
+}
 
 /** Tower type */
 UENUM(BlueprintType)

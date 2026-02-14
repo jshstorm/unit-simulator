@@ -9,6 +9,8 @@ ASimGameMode::ASimGameMode()
 	PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
 
+ASimGameMode::~ASimGameMode() = default;
+
 // ════════════════════════════════════════════════════════════════════════════
 // AGameModeBase overrides
 // ════════════════════════════════════════════════════════════════════════════
@@ -261,13 +263,13 @@ void ASimGameMode::BindSimulatorCallbacks()
 
 	FSimulatorCallbacks& Callbacks = SimulatorCore->Callbacks;
 
-	FrameGeneratedHandle = Callbacks.OnFrameGenerated.AddRaw(
+	FrameGeneratedHandle = Callbacks.OnFrameGenerated.AddUObject(
 		this, &ASimGameMode::HandleFrameGenerated);
 
-	SimCompleteHandle = Callbacks.OnSimulationComplete.AddRaw(
+	SimCompleteHandle = Callbacks.OnSimulationComplete.AddUObject(
 		this, &ASimGameMode::HandleSimulationComplete);
 
-	UnitEventHandle = Callbacks.OnUnitEvent.AddRaw(
+	UnitEventHandle = Callbacks.OnUnitEvent.AddUObject(
 		this, &ASimGameMode::HandleUnitEvent);
 }
 

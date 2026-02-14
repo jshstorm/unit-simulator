@@ -4,7 +4,7 @@
 #include "GameConstants.h"
 #include "GameState/GameResult.h"
 #include "Towers/Tower.h"
-#include "GameSession.generated.h"
+#include "SimGameSession.generated.h"
 
 struct FTowerSetup;
 
@@ -13,7 +13,7 @@ struct FTowerSetup;
  * Ported from GameState/GameSession.cs (323 lines)
  */
 USTRUCT(BlueprintType)
-struct UNITSIMCORE_API FGameSession
+struct UNITSIMCORE_API FSimGameSession
 {
 	GENERATED_BODY()
 

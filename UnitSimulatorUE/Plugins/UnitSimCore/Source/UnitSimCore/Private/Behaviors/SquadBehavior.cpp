@@ -7,6 +7,7 @@
 #include "Targeting/TowerTargetingRules.h"
 #include "Pathfinding/PathProgressMonitor.h"
 #include "Simulation/SimulatorCore.h"
+#include "Pathfinding/AStarPathfinder.h"
 
 // ============================================================================
 // Formation Offsets

@@ -80,7 +80,7 @@ TArray<FUnitSpawnRequest> FCombatSystem::CreateDeathSpawnRequests(const FUnit& D
 		const FVector2D SpawnPos = DeadUnit.Position + Offset * SpawnData.SpawnRadius;
 
 		FUnitSpawnRequest Request;
-		Request.UnitId = FName(*SpawnData.SpawnUnitId);
+		Request.UnitId = SpawnData.SpawnUnitId;
 		Request.Position = SpawnPos;
 		Request.Faction = DeadUnit.Faction;
 		Request.HP = SpawnData.SpawnUnitHP;

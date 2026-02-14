@@ -2,7 +2,7 @@
 
 void FFrameEvents::AddDamage(int32 SourceIndex, int32 TargetIndex, int32 Amount, EDamageType Type)
 {
-	FDamageEvent Event;
+	FSimDamageEvent Event;
 	Event.SourceIndex = SourceIndex;
 	Event.TargetIndex = TargetIndex;
 	Event.Amount = Amount;

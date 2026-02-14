@@ -3,7 +3,7 @@
 #include "Simulation/FrameData.h"
 #include "Units/Unit.h"
 #include "Towers/Tower.h"
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 #include "Pathfinding/PathfindingGrid.h"
 #include "Pathfinding/PathNode.h"
 #include "DrawDebugHelpers.h"
@@ -154,7 +154,7 @@ void USimDebugDrawer::DrawDebugTowers(const UWorld* World, const FSimulatorCore*
 		return;
 	}
 
-	const FGameSession& Session = Simulator->GetGameSession();
+	const FSimGameSession& Session = Simulator->GetGameSession();
 
 	auto DrawTowerArray = [this, World](const TArray<FTower>& Towers, const FColor& Color)
 	{

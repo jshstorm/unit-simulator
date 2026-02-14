@@ -297,18 +297,26 @@ bool UJsonDataLoader::LoadWaves(const FString& FilePath, TArray<FWaveDefinition>
 					continue;
 				}
 
-				FWaveSpawnEntry Entry;
+				FWaveSpawnGroup Entry;
 				Entry.UnitId = FName(*(*SpawnObj)->GetStringField(TEXT("unitId")));
+				Entry.Count = (*SpawnObj)->GetIntegerField(TEXT("count"));
+
+				// Parse faction
+				FString FactionStr;
+				if ((*SpawnObj)->TryGetStringField(TEXT("faction"), FactionStr))
+				{
+					Entry.Faction = FactionStr;
+				}
 
 				// Parse position
 				const TSharedPtr<FJsonObject>* PosObj = nullptr;
 				if ((*SpawnObj)->TryGetObjectField(TEXT("position"), PosObj) && PosObj && (*PosObj).IsValid())
 				{
-					Entry.SpawnPosition.X = (*PosObj)->GetNumberField(TEXT("x"));
-					Entry.SpawnPosition.Y = (*PosObj)->GetNumberField(TEXT("y"));
+					Entry.SpawnX = (*PosObj)->GetNumberField(TEXT("x"));
+					Entry.SpawnY = (*PosObj)->GetNumberField(TEXT("y"));
 				}
 
-				Wave.Spawns.Add(Entry);
+				Wave.SpawnGroups.Add(Entry);
 			}
 		}
 

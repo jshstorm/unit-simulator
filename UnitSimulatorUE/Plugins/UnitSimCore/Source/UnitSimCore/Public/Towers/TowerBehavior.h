@@ -5,7 +5,7 @@
 struct FTower;
 struct FUnit;
 struct FFrameEvents;
-class FGameSession;
+struct FSimGameSession;
 
 /**
  * Tower behavior: targeting, attack, cooldown.
@@ -38,7 +38,7 @@ public:
 	 * @param DeltaTime        Frame time in seconds
 	 */
 	void UpdateAllTowers(
-		FGameSession& Session,
+		FSimGameSession& Session,
 		const TArray<FUnit>& FriendlyUnits,
 		const TArray<FUnit>& EnemyUnits,
 		FFrameEvents& Events,

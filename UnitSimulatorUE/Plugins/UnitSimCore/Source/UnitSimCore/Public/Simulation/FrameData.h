@@ -8,7 +8,7 @@
 // Forward declarations
 struct FUnit;
 struct FTower;
-struct FGameSession;
+struct FSimGameSession;
 
 /**
  * Serialized state of a single unit within a frame snapshot.
@@ -237,7 +237,7 @@ struct UNITSIMCORE_API FFrameData
 		const FVector2D& MainTarget,
 		int32 CurrentWave,
 		bool bHasMoreWaves,
-		const FGameSession* Session = nullptr);
+		const FSimGameSession* Session = nullptr);
 
 	/** Serialize to JSON string */
 	FString ToJson() const;

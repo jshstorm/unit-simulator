@@ -1,7 +1,7 @@
 #include "GameState/WinConditionEvaluator.h"
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 
-void FWinConditionEvaluator::Evaluate(FGameSession& Session)
+void FWinConditionEvaluator::Evaluate(FSimGameSession& Session)
 {
 	if (Session.Result != EGameResult::InProgress)
 	{
@@ -82,7 +82,7 @@ void FWinConditionEvaluator::Evaluate(FGameSession& Session)
 	Session.WinConditionType = EWinCondition::MoreTowerDamage;
 }
 
-void FWinConditionEvaluator::SetWinnerByCrowns(FGameSession& Session, EWinCondition Condition)
+void FWinConditionEvaluator::SetWinnerByCrowns(FSimGameSession& Session, EWinCondition Condition)
 {
 	Session.Result = Session.FriendlyCrowns > Session.EnemyCrowns
 		? EGameResult::FriendlyWin

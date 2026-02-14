@@ -17,7 +17,7 @@ enum class EDamageType : uint8
 
 /** Unit-to-unit damage event */
 USTRUCT(BlueprintType)
-struct UNITSIMCORE_API FDamageEvent
+struct UNITSIMCORE_API FSimDamageEvent
 {
 	GENERATED_BODY()
 
@@ -106,7 +106,7 @@ struct UNITSIMCORE_API FFrameEvents
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FDamageEvent> Damages;
+	TArray<FSimDamageEvent> Damages;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FUnitSpawnRequest> Spawns;

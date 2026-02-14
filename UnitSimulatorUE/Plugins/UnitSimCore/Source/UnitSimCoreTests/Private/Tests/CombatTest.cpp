@@ -82,7 +82,7 @@ bool FCombatSplashDamage::RunTest(const FString& Parameters)
 	// Primary event
 	bool bHasPrimary = false;
 	bool bHasSplash = false;
-	for (const FDamageEvent& Evt : Events.Damages)
+	for (const FSimDamageEvent& Evt : Events.Damages)
 	{
 		if (Evt.TargetIndex == 0 && Evt.Type == EDamageType::Normal) bHasPrimary = true;
 		if (Evt.TargetIndex == 1 && Evt.Type == EDamageType::Splash) bHasSplash = true;
@@ -181,7 +181,7 @@ bool FCombatTwoPhaseOrder::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Events collected"), Events.GetDamageCount(), 1);
 
 	// Phase 2: Apply (simulate manual application)
-	for (const FDamageEvent& Evt : Events.Damages)
+	for (const FSimDamageEvent& Evt : Events.Damages)
 	{
 		if (Evt.TargetIndex >= 0 && Evt.TargetIndex < Enemies.Num())
 		{

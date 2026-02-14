@@ -1,8 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameState/GameResult.h"
 
-struct FGameSession;
+struct FSimGameSession;
 
 /**
  * Evaluates win conditions: king destroyed, crown count, tower damage.
@@ -13,8 +14,8 @@ class UNITSIMCORE_API FWinConditionEvaluator
 {
 public:
 	/** Evaluate win conditions and update session result */
-	void Evaluate(FGameSession& Session);
+	void Evaluate(FSimGameSession& Session);
 
 private:
-	static void SetWinnerByCrowns(FGameSession& Session, EWinCondition Condition);
+	static void SetWinnerByCrowns(FSimGameSession& Session, EWinCondition Condition);
 };

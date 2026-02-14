@@ -5,9 +5,8 @@
 #include "Simulation/FrameData.h"
 #include "Simulation/SimulatorCallbacks.h"
 #include "Data/JsonDataLoader.h"
+#include "Simulation/SimulatorCore.h"
 #include "SimGameMode.generated.h"
-
-class FSimulatorCore;
 
 /**
  * Game mode that owns and drives the UnitSimCore simulation.
@@ -26,6 +25,7 @@ class UNITSIMGAME_API ASimGameMode : public AGameModeBase
 
 public:
 	ASimGameMode();
+	virtual ~ASimGameMode();
 
 	// ════════════════════════════════════════════════════════════════════════
 	// AGameModeBase overrides

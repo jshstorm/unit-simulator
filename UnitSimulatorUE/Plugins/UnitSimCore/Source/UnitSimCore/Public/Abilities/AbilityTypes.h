@@ -5,19 +5,6 @@
 #include "AbilityTypes.generated.h"
 
 /**
- * Base ability data struct.
- * All specific ability data types inherit from this.
- */
-USTRUCT(BlueprintType)
-struct UNITSIMCORE_API FAbilityData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::ChargeAttack;
-};
-
-/**
  * ChargeAttack ability data.
  * Applies damage multiplier after moving a certain distance.
  */
@@ -25,9 +12,6 @@ USTRUCT(BlueprintType)
 struct UNITSIMCORE_API FChargeAttackData
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::ChargeAttack;
 
 	/** Minimum distance to trigger charge */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -55,9 +39,6 @@ struct UNITSIMCORE_API FSplashDamageData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::SplashDamage;
-
 	/** Splash radius */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Radius = 60.f;
@@ -75,9 +56,6 @@ USTRUCT(BlueprintType)
 struct UNITSIMCORE_API FShieldData
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::Shield;
 
 	/** Maximum shield HP */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -100,9 +78,6 @@ USTRUCT(BlueprintType)
 struct UNITSIMCORE_API FDeathSpawnData
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::DeathSpawn;
 
 	/** Unit definition ID to spawn */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -130,9 +105,6 @@ struct UNITSIMCORE_API FDeathDamageData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::DeathDamage;
-
 	/** Explosion damage amount */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Damage = 100;
@@ -155,9 +127,6 @@ struct UNITSIMCORE_API FStatusEffectAbilityData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EAbilityType Type = EAbilityType::StatusEffect;
-
 	/** Status effect type to apply (bitmask flags) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "/Script/UnitSimCore.EStatusEffectType"))
 	int32 AppliedEffect = 0;
@@ -177,4 +146,36 @@ struct UNITSIMCORE_API FStatusEffectAbilityData
 	/** Affected target type */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETargetType AffectedTargets = ETargetType::Ground;
+};
+
+/**
+ * Base ability data struct.
+ * Contains the ability type and typed sub-data for each ability kind.
+ * Only the sub-struct matching Type is valid.
+ */
+USTRUCT(BlueprintType)
+struct UNITSIMCORE_API FAbilityData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EAbilityType Type = EAbilityType::ChargeAttack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FChargeAttackData ChargeAttack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FSplashDamageData SplashDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FShieldData Shield;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FDeathSpawnData DeathSpawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FDeathDamageData DeathDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FStatusEffectAbilityData StatusEffect;
 };

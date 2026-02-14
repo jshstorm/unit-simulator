@@ -9,7 +9,7 @@
 #include "Combat/CombatSystem.h"
 #include "Combat/FrameEvents.h"
 #include "Towers/TowerBehavior.h"
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 #include "GameState/GameResult.h"
 #include "GameState/WinConditionEvaluator.h"
 #include "GameState/InitialSetup.h"
@@ -229,8 +229,8 @@ public:
 	TArray<FUnit>& GetFriendlyUnitsRef() { return FriendlySquad; }
 	TArray<FUnit>& GetEnemyUnitsRef() { return EnemySquad; }
 	const FVector2D& GetMainTarget() const { return MainTarget; }
-	FGameSession& GetGameSession() { return GameSession; }
-	const FGameSession& GetGameSession() const { return GameSession; }
+	FSimGameSession& GetGameSession() { return GameSession; }
+	const FSimGameSession& GetGameSession() const { return GameSession; }
 	FTerrainSystem& GetTerrainSystem() { return TerrainSystem; }
 	const FTerrainSystem& GetTerrainSystem() const { return TerrainSystem; }
 	FAStarPathfinder* GetPathfinder() const { return Pathfinder.Get(); }
@@ -262,7 +262,7 @@ private:
 	FSquadBehavior SquadBehavior;
 	FEnemyBehavior EnemyBehavior;
 	FCombatSystem CombatSystem;
-	FGameSession GameSession;
+	FSimGameSession GameSession;
 	FTowerBehavior TowerBehavior;
 	FWinConditionEvaluator WinConditionEvaluator;
 	FTerrainSystem TerrainSystem;

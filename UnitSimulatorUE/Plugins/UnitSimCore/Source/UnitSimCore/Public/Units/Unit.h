@@ -7,7 +7,7 @@
 #include "Unit.generated.h"
 
 // Forward declarations
-class FTower;
+struct FTower;
 
 /**
  * Core unit state and behavior.

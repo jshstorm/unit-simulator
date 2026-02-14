@@ -35,7 +35,7 @@ struct UNITSIMCORE_API FGameData
 /**
  * Static utility class for loading game data from JSON files.
  * Uses UE JSON API (FJsonSerializer, FJsonObject) to parse
- * data/references/*.json files into USTRUCT types.
+ * data references JSON files into USTRUCT types.
  */
 UCLASS()
 class UNITSIMCORE_API UJsonDataLoader : public UObject

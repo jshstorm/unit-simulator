@@ -1,9 +1,9 @@
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 #include "GameState/InitialSetup.h"
 #include "Towers/TowerStats.h"
 #include "Terrain/MapLayout.h"
 
-void FGameSession::InitializeTowers(const TArray<FTowerSetup>& TowerSetups)
+void FSimGameSession::InitializeTowers(const TArray<FTowerSetup>& TowerSetups)
 {
 	FriendlyTowers.Empty();
 	EnemyTowers.Empty();
@@ -31,13 +31,13 @@ void FGameSession::InitializeTowers(const TArray<FTowerSetup>& TowerSetups)
 	bIsOvertime = false;
 }
 
-void FGameSession::InitializeDefaultTowers()
+void FSimGameSession::InitializeDefaultTowers()
 {
 	TArray<FTowerSetup> Defaults = TowerSetupDefaults::ClashRoyaleStandard();
 	InitializeTowers(Defaults);
 }
 
-FTower FGameSession::CreateTowerFromSetup(int32 Id, const FTowerSetup& Setup)
+FTower FSimGameSession::CreateTowerFromSetup(int32 Id, const FTowerSetup& Setup)
 {
 	const FVector2D Position = Setup.bHasPosition
 		? Setup.Position
@@ -61,7 +61,7 @@ FTower FGameSession::CreateTowerFromSetup(int32 Id, const FTowerSetup& Setup)
 	return Tower;
 }
 
-FVector2D FGameSession::GetDefaultTowerPosition(ETowerType Type, EUnitFaction Faction)
+FVector2D FSimGameSession::GetDefaultTowerPosition(ETowerType Type, EUnitFaction Faction)
 {
 	if (Type == ETowerType::King)
 	{
@@ -76,17 +76,17 @@ FVector2D FGameSession::GetDefaultTowerPosition(ETowerType Type, EUnitFaction Fa
 		: MapLayout::EnemyPrincessLeftPosition();
 }
 
-TArray<FTower>& FGameSession::GetTowers(EUnitFaction Faction)
+TArray<FTower>& FSimGameSession::GetTowers(EUnitFaction Faction)
 {
 	return Faction == EUnitFaction::Friendly ? FriendlyTowers : EnemyTowers;
 }
 
-const TArray<FTower>& FGameSession::GetTowers(EUnitFaction Faction) const
+const TArray<FTower>& FSimGameSession::GetTowers(EUnitFaction Faction) const
 {
 	return Faction == EUnitFaction::Friendly ? FriendlyTowers : EnemyTowers;
 }
 
-int32 FGameSession::GetKingTowerIndex(EUnitFaction Faction) const
+int32 FSimGameSession::GetKingTowerIndex(EUnitFaction Faction) const
 {
 	const TArray<FTower>& Towers = GetTowers(Faction);
 	for (int32 i = 0; i < Towers.Num(); ++i)
@@ -99,7 +99,7 @@ int32 FGameSession::GetKingTowerIndex(EUnitFaction Faction) const
 	return -1;
 }
 
-FTower* FGameSession::GetKingTower(EUnitFaction Faction)
+FTower* FSimGameSession::GetKingTower(EUnitFaction Faction)
 {
 	const int32 Index = GetKingTowerIndex(Faction);
 	if (Index >= 0)
@@ -109,7 +109,7 @@ FTower* FGameSession::GetKingTower(EUnitFaction Faction)
 	return nullptr;
 }
 
-const FTower* FGameSession::GetKingTower(EUnitFaction Faction) const
+const FTower* FSimGameSession::GetKingTower(EUnitFaction Faction) const
 {
 	const int32 Index = GetKingTowerIndex(Faction);
 	if (Index >= 0)
@@ -119,7 +119,7 @@ const FTower* FGameSession::GetKingTower(EUnitFaction Faction) const
 	return nullptr;
 }
 
-void FGameSession::GetAllTowers(TArray<FTower*>& OutTowers)
+void FSimGameSession::GetAllTowers(TArray<FTower*>& OutTowers)
 {
 	OutTowers.Empty();
 	for (FTower& Tower : FriendlyTowers)
@@ -132,13 +132,13 @@ void FGameSession::GetAllTowers(TArray<FTower*>& OutTowers)
 	}
 }
 
-void FGameSession::UpdateCrowns()
+void FSimGameSession::UpdateCrowns()
 {
 	FriendlyCrowns = CountCrownsFromDestroyedTowers(EUnitFaction::Enemy);
 	EnemyCrowns = CountCrownsFromDestroyedTowers(EUnitFaction::Friendly);
 }
 
-int32 FGameSession::CountCrownsFromDestroyedTowers(EUnitFaction DestroyedFaction) const
+int32 FSimGameSession::CountCrownsFromDestroyedTowers(EUnitFaction DestroyedFaction) const
 {
 	int32 Crowns = 0;
 	const TArray<FTower>& Towers = GetTowers(DestroyedFaction);
@@ -152,13 +152,13 @@ int32 FGameSession::CountCrownsFromDestroyedTowers(EUnitFaction DestroyedFaction
 	return FMath::Min(Crowns, 3);
 }
 
-void FGameSession::UpdateKingTowerActivation()
+void FSimGameSession::UpdateKingTowerActivation()
 {
 	UpdateKingActivationForFaction(EUnitFaction::Friendly);
 	UpdateKingActivationForFaction(EUnitFaction::Enemy);
 }
 
-void FGameSession::UpdateKingActivationForFaction(EUnitFaction Faction)
+void FSimGameSession::UpdateKingActivationForFaction(EUnitFaction Faction)
 {
 	FTower* King = GetKingTower(Faction);
 	if (King == nullptr || King->bIsActivated) return;
@@ -175,7 +175,7 @@ void FGameSession::UpdateKingActivationForFaction(EUnitFaction Faction)
 	}
 }
 
-float FGameSession::GetTotalTowerHPRatio(EUnitFaction Faction) const
+float FSimGameSession::GetTotalTowerHPRatio(EUnitFaction Faction) const
 {
 	const TArray<FTower>& Towers = GetTowers(Faction);
 	if (Towers.Num() == 0) return 0.f;

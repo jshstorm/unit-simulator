@@ -63,7 +63,7 @@ public:
 	 * Draw all enabled debug layers.
 	 * Call this each frame from the GameMode or HUD.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "UnitSim|Debug")
+	/** Draw all enabled debug layers. Call this each frame from the GameMode or HUD. */
 	void DrawAll(const UWorld* World, const FSimulatorCore* Simulator);
 
 	/** Draw unit positions with HP and status indicators */

@@ -387,7 +387,7 @@ void FSimulatorCore::ExecuteCommand(const TSharedPtr<ISimulationCommand>& Cmd)
 
 void FSimulatorCore::ApplyDamageEvents(const FFrameEvents& Events)
 {
-	for (const FDamageEvent& Dmg : Events.Damages)
+	for (const FSimDamageEvent& Dmg : Events.Damages)
 	{
 		// Determine target squad by source
 		// TargetIndex is an index into the opposing squad

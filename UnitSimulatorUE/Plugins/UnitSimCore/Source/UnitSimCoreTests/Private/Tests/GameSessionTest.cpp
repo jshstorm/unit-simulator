@@ -1,5 +1,5 @@
 #include "Misc/AutomationTest.h"
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 #include "GameState/InitialSetup.h"
 #include "GameState/WinConditionEvaluator.h"
 #include "GameState/GameResult.h"
@@ -7,17 +7,17 @@
 #include "Towers/TowerStats.h"
 
 // ============================================================================
-// FGameSession Initialization (Default Towers)
+// FSimGameSession Initialization (Default Towers)
 // ============================================================================
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameSessionInit,
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSimGameSessionInit,
 	"UnitSimCore.GameSession.Initialize.DefaultTowers",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FGameSessionInit::RunTest(const FString& Parameters)
+bool FSimGameSessionInit::RunTest(const FString& Parameters)
 {
 	// Arrange & Act
-	FGameSession Session;
+	FSimGameSession Session;
 	Session.InitializeDefaultTowers();
 
 	// Assert: Clash Royale standard = 3 towers per faction
@@ -52,14 +52,14 @@ bool FGameSessionInit::RunTest(const FString& Parameters)
 // Tower Damage -> Crown Award
 // ============================================================================
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameSessionCrowns,
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSimGameSessionCrowns,
 	"UnitSimCore.GameSession.Crowns.AwardedOnTowerDestruction",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FGameSessionCrowns::RunTest(const FString& Parameters)
+bool FSimGameSessionCrowns::RunTest(const FString& Parameters)
 {
 	// Arrange
-	FGameSession Session;
+	FSimGameSession Session;
 	Session.InitializeDefaultTowers();
 
 	// Initial crowns should be 0
@@ -90,14 +90,14 @@ bool FGameSessionCrowns::RunTest(const FString& Parameters)
 // King Tower Activation
 // ============================================================================
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameSessionKingActivation,
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSimGameSessionKingActivation,
 	"UnitSimCore.GameSession.KingTower.ActivatesOnPrincessDestruction",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FGameSessionKingActivation::RunTest(const FString& Parameters)
+bool FSimGameSessionKingActivation::RunTest(const FString& Parameters)
 {
 	// Arrange
-	FGameSession Session;
+	FSimGameSession Session;
 	Session.InitializeDefaultTowers();
 
 	// King tower should start deactivated
@@ -143,7 +143,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWinCondKingDestroyed,
 bool FWinCondKingDestroyed::RunTest(const FString& Parameters)
 {
 	// Arrange
-	FGameSession Session;
+	FSimGameSession Session;
 	Session.InitializeDefaultTowers();
 	Session.ElapsedTime = 10.f; // within regulation time
 
@@ -224,17 +224,17 @@ bool FTowerDamage::RunTest(const FString& Parameters)
 }
 
 // ============================================================================
-// FGameSession GetTotalTowerHPRatio
+// FSimGameSession GetTotalTowerHPRatio
 // ============================================================================
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameSessionHPRatio,
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSimGameSessionHPRatio,
 	"UnitSimCore.GameSession.Tower.HPRatio",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FGameSessionHPRatio::RunTest(const FString& Parameters)
+bool FSimGameSessionHPRatio::RunTest(const FString& Parameters)
 {
 	// Arrange
-	FGameSession Session;
+	FSimGameSession Session;
 	Session.InitializeDefaultTowers();
 
 	// Act: full HP

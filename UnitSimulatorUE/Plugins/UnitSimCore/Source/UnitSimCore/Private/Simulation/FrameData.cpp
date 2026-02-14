@@ -1,7 +1,7 @@
 #include "Simulation/FrameData.h"
 #include "Units/Unit.h"
 #include "Towers/Tower.h"
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 
 // ============================================================================
 // FUnitStateData
@@ -148,7 +148,7 @@ FFrameData FFrameData::FromSimulationState(
 	const FVector2D& MainTarget,
 	int32 CurrentWave,
 	bool bHasMoreWaves,
-	const FGameSession* Session)
+	const FSimGameSession* Session)
 {
 	FFrameData Data;
 	Data.FrameNumber = FrameNumber;

@@ -2,7 +2,7 @@
 #include "Towers/Tower.h"
 #include "Units/Unit.h"
 #include "Combat/FrameEvents.h"
-#include "GameState/GameSession.h"
+#include "GameState/SimGameSession.h"
 
 void FTowerBehavior::UpdateTowers(
 	TArray<FTower>& Towers,
@@ -83,7 +83,7 @@ void FTowerBehavior::ProcessAttack(FTower& Tower, int32 TowerIndex, FFrameEvents
 }
 
 void FTowerBehavior::UpdateAllTowers(
-	FGameSession& Session,
+	FSimGameSession& Session,
 	const TArray<FUnit>& FriendlyUnits,
 	const TArray<FUnit>& EnemyUnits,
 	FFrameEvents& Events,
